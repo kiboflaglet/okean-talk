@@ -2,12 +2,30 @@ import {
   HomeIcon,
   Languages,
   Lightbulb,
+  LogOutIcon,
   Search,
   Settings,
-  User,
-  Users,
+  SettingsIcon,
+  Users
 } from "lucide-react";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../components/ui/avatar";
 import { Button } from "../../components/ui/button";
+
+import { supabase } from "../../lib/supabaseClient";
+import type { User } from "@supabase/supabase-js";
+import { useMemo, useTransition } from "react";
+import { useLoaderData } from "react-router";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
 import {
   InputGroup,
   InputGroupAddon,
@@ -18,10 +36,28 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../components/ui/tooltip";
-import Rooms from "./rooms";
 import { RoomCreate } from "./room-create";
+import Rooms from "./rooms";
+import SignInButton from "./sign-in-button";
 
 const Home = () => {
+  const user: User = useLoaderData();
+  const [signOutLoading, setSignOutLoading] = useTransition();
+  const userInitials = useMemo(() => {
+    if (!user) return "";
+    return user.user_metadata.full_name
+      .split(" ")
+      .map((word: string) => word[0])
+      .join("");
+  }, [user]);
+
+  const logOut = () => {
+    setSignOutLoading(async () => {
+      await supabase.auth.signOut();
+      window.location.reload();
+    });
+  };
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gray-2 font-sans text-gray-12">
       <aside className="[&>div]:cursor-pointer flex w-20 flex-col items-center border-r border-gray-4 bg-color-gray-1 py-6">
@@ -63,7 +99,36 @@ const Home = () => {
           <div className="h-6 w-6 rounded  flex justify-center items-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <User />
+                {user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Avatar className="size-9">
+                        <AvatarImage
+                          alt={user.user_metadata.full_name}
+                          src={user.user_metadata.avatar_url}
+                        />
+                        <AvatarFallback>{userInitials}</AvatarFallback>
+                      </Avatar>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="z-40" side="left">
+                      <DropdownMenuItem>
+                        <SettingsIcon />
+                        Settings
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        disabled={signOutLoading}
+                        onClick={logOut}
+                        variant="destructive"
+                      >
+                        <LogOutIcon />
+                        Log out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <SignInButton />
+                )}
               </TooltipTrigger>
               <TooltipContent className="text-sm" side="right" sideOffset={10}>
                 Profile

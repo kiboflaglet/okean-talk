@@ -17,10 +17,16 @@ async function requireAuth() {
   return data.session.user;
 }
 
+async function getUser() {
+  const {data} = await supabase.auth.getSession()
+  return data?.session?.user ? data.session.user : null
+}
+
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    loader: getUser
   },
   {
     path: "/room",
