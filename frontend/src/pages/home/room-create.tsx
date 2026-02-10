@@ -3,8 +3,8 @@ import { Dice4, Loader } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Select from "react-select";
-import { Button } from "../components/ui/button";
-import { ButtonGroup } from "../components/ui/button-group";
+import { Button } from "../../components/ui/button";
+import { ButtonGroup } from "../../components/ui/button-group";
 import {
   Dialog,
   DialogClose,
@@ -13,16 +13,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../components/ui/dialog";
-import { Field, FieldGroup, FieldLabel } from "../components/ui/field";
-import { Input } from "../components/ui/input";
-import { RandomTopics, rooms } from "../data";
+} from "../../components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "../../components/ui/field";
+import { Input } from "../../components/ui/input";
+import { RandomTopics, rooms } from "../../data";
 import { roomSchema, type RoomFormValues } from "./roomSchema";
-import { Languages } from "../types";
+import { Languages } from "../../types";
 import { useDispatch } from "react-redux";
-import { type AppDispatch } from "../app/store";
-import { addRoom } from "../features/rooms/roomSlice";
-import type { IRoom } from "../interfaces";
+import { type AppDispatch } from "../../app/store";
+import { addRoom } from "../../features/rooms/roomSlice";
+import type { IRoom } from "../../interfaces";
 
 export function RoomCreate() {
   const dispatch = useDispatch<AppDispatch>();
@@ -67,7 +67,6 @@ export function RoomCreate() {
         topic: data.topic,
         ownerId: "user-1",
         languages: data.languages,
-        topics: ["it"],
         createdAt: new Date().toUTCString(),
         maxParticipants: data.maxParticipants,
       };

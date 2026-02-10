@@ -9,23 +9,23 @@ import {
   SettingsIcon,
   UserIcon
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Button } from "../components/ui/button";
-import { ButtonGroup } from "../components/ui/button-group";
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import { Button } from "../../components/ui/button";
+import { ButtonGroup } from "../../components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
+} from "../../components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "../components/ui/tooltip";
-import type { IRoom, IUser } from "../interfaces";
-import { Languages } from "../types";
+} from "../../components/ui/tooltip";
+import type { IRoom, IUser } from "../../interfaces";
+import { Languages } from "../../types";
 
 const RoomSingle = ({
   copyId,

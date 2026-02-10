@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useSelector } from 'react-redux';
-import { roomsSelect } from "../features/rooms/roomSlice";
+import { roomsSelect } from "../../features/rooms/roomSlice";
 import RoomSingle from "./room-single";
 
 const Rooms = () => {

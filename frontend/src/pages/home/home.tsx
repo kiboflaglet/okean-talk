@@ -7,17 +7,17 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Button } from "../../components/ui/button";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "../components/ui/input-group";
+} from "../../components/ui/input-group";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "../components/ui/tooltip";
+} from "../../components/ui/tooltip";
 import Rooms from "./rooms";
 import { RoomCreate } from "./room-create";
 
