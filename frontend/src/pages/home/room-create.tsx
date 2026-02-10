@@ -2,9 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Dice4, Loader } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
 import Select from "react-select";
-import { type AppDispatch } from "../../app/store";
 import { Button } from "../../components/ui/button";
 import { ButtonGroup } from "../../components/ui/button-group";
 import {
@@ -19,13 +17,11 @@ import {
 import { Field, FieldGroup, FieldLabel } from "../../components/ui/field";
 import { Input } from "../../components/ui/input";
 import { RandomTopics } from "../../data";
-import { addRoom } from "../../features/rooms/roomSlice";
 import type { IRoom } from "../../interfaces";
 import { Languages } from "../../types";
 import { roomSchema, type RoomFormValues } from "./roomSchema";
 
 export function RoomCreate() {
-  const dispatch = useDispatch<AppDispatch>();
   const [randomAvaialableCount, setRandomAvaialableCount] = useState<number>(3);
   const [loadingRandomTopic, setLoadingRandomTopic] = useTransition();
   const [loadingForm, setLoadingForm] = useTransition();
@@ -70,7 +66,6 @@ export function RoomCreate() {
         createdAt: new Date().toUTCString(),
         maxParticipants: data.maxParticipants,
       };
-      dispatch(addRoom(request));
       setRoomCreateFormOpen(false);
       console.log(data);
     });
