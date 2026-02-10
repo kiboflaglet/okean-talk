@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { useCallback, useEffect, useState } from "react";
 import type { IRoom, RoomFilters } from "../interfaces";
+import { supabase } from "../lib/supabaseClient";
 import { toPgArray } from "../lib/utils";
 
 export const useRooms = (filters?: RoomFilters) => {
@@ -49,7 +49,7 @@ export const useRooms = (filters?: RoomFilters) => {
     []
   );
   const deleteRoom = useCallback(async (id: string) => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("rooms")
       .delete()
       .eq("id", id)

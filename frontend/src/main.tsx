@@ -1,11 +1,8 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
+import { createBrowserRouter, redirect, RouterProvider } from "react-router";
 import App from "./App.tsx";
 import { TooltipProvider } from "./components/ui/tooltip.tsx";
-import { Provider } from "react-redux";
-import store from "./app/store.ts";
-import { createBrowserRouter, redirect, RouterProvider } from "react-router";
+import "./index.css";
 import { supabase } from "./lib/supabaseClient.ts";
 import Room from "./pages/protected/room/Room.tsx";
 import { RoomsProvider } from "./provider/roomsContext.tsx";
@@ -37,13 +34,9 @@ const router = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")!).render(
-  // <StrictMode>
-    <Provider store={store}>
       <TooltipProvider>
         <RoomsProvider>
           <RouterProvider router={router} />
         </RoomsProvider>
       </TooltipProvider>
-    </Provider>
-  // </StrictMode>
 );

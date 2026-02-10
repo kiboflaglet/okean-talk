@@ -1,12 +1,11 @@
 import {
   HomeIcon,
   Languages as LangIcon,
-  Lightbulb,
   LogOutIcon,
   Search,
   Settings,
   SettingsIcon,
-  Users,
+  Users
 } from "lucide-react";
 import Select, { type MultiValue } from "react-select";
 import {
@@ -14,12 +13,11 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "../../components/ui/avatar";
-import { Button } from "../../components/ui/button";
 
-import { supabase } from "../../lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useLoaderData } from "react-router";
+import { Languages, type TLanguage } from "../../../src/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,16 +35,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../components/ui/tooltip";
+import { supabase } from "../../lib/supabaseClient";
+import { useRoomsContext } from "../../provider/roomsContext";
 import { RoomCreate } from "./room-create";
 import Rooms from "./rooms";
 import SignInButton from "./sign-in-button";
-import { Languages, type TLanguage } from "../../../src/types";
-import { useRoomsContext } from "../../provider/roomsContext";
 
 const Home = () => {
   const user: User = useLoaderData();
   const [signOutLoading, setSignOutLoading] = useTransition();
-  const [searchQuery, setSearchQuery] = useState<string | null>(null)
   const [selectedLanguages, setSelectedLanguages] = useState<TLanguage[]>([]);
   const {setFilters} = useRoomsContext()
   useEffect(() => {
