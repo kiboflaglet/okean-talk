@@ -139,3 +139,63 @@
     /* Firefox */
   }
 }
+
+/* Container */
+
+/* .select-style .react-select_value-container {
+  @apply 
+} */
+.select-style .react-select__control {
+  @apply rounded-full border border-gray-5 bg-gray-4 w-full text-xs text-gray-12 p-0  min-h-0 h-8;
+}
+
+.select-style .react-select__control--is-focused {
+  @apply border-gray-400 shadow-sm  m-0 ;
+}
+
+/* Dropdown menu */
+.select-style .react-select__menu {
+  @apply rounded-2xl border border-gray-300 bg-gray-5 shadow-md border-none;
+}
+
+/* Individual option */
+.select-style .react-select__option {
+  @apply text-gray-12 cursor-pointer capitalize rounded-full ;
+}
+
+.select-style .react-select__option--is-focused {
+  @apply bg-gray-4 text-gray-12;
+}
+
+.select-style .react-select__option--is-selected {
+  @apply bg-gray-4 text-gray-12 font-bold;
+}
+
+/* Selected value */
+.select-style .react-select__single-value {
+  @apply text-gray-12;
+}
+
+/* Input field inside control */
+.select-style .react-select__input {
+  @apply text-gray-12 outline-none;
+}
+
+/* Placeholder */
+.select-style .react-select__placeholder {
+  @apply text-gray-12 font-bold;
+}
+
+/* Remove multi-value badges */
+/* .select-style .react-select__multi-value {
+  @apply hidden;
+} */
+
+/* Indicators container (dropdown arrow) */
+.select-style .react-select__indicators {
+  @apply p-0 gap-1 mr-2 ;
+}
+
+.select-style .react-select__indicator {
+  @apply p-0  w-5 h-5 hover:text-gray-12 focus:text-gray-12 ;
+}

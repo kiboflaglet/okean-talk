@@ -6,9 +6,13 @@ export const Topics = [
 export type TTopic = (typeof Topics[number])["key"]
 
 
+export type TLanguage = {
+  value: string 
+  label: string 
+  nativelabel: string
+}
 
-
-export const Languages = [
+export const Languages: TLanguage[] = [
   {"value":"ab","label":"Abkhaz","nativelabel":"аҧсуа"},
   {"value":"aa","label":"Afar","nativelabel":"Afaraf"},
   {"value":"af","label":"Afrikaans","nativelabel":"Afrikaans"},
@@ -192,3 +196,4 @@ export const Languages = [
   {"value":"yo","label":"Yoruba","nativelabel":"Yorùbá"},
   {"value":"za","label":"Zhuang, Chuang","nativelabel":"Saɯ cueŋƅ, Saw cuengh"}
 ]
+

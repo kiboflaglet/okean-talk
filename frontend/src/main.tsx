@@ -8,6 +8,7 @@ import store from "./app/store.ts";
 import { createBrowserRouter, redirect, RouterProvider } from "react-router";
 import { supabase } from "./lib/supabaseClient.ts";
 import Room from "./pages/protected/room/Room.tsx";
+import { RoomsProvider } from "./provider/roomsContext.tsx";
 
 async function requireAuth() {
   const { data } = await supabase.auth.getSession();
@@ -18,29 +19,31 @@ async function requireAuth() {
 }
 
 async function getUser() {
-  const {data} = await supabase.auth.getSession()
-  return data?.session?.user ? data.session.user : null
+  const { data } = await supabase.auth.getSession();
+  return data?.session?.user ? data.session.user : null;
 }
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-    loader: getUser
+    loader: getUser,
   },
   {
     path: "/room",
     element: <Room />,
-    loader: requireAuth
-  }
+    loader: requireAuth,
+  },
 ]);
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  // <StrictMode>
     <Provider store={store}>
       <TooltipProvider>
-        <RouterProvider router={router} />
+        <RoomsProvider>
+          <RouterProvider router={router} />
+        </RoomsProvider>
       </TooltipProvider>
     </Provider>
-  </StrictMode>
+  // </StrictMode>
 );

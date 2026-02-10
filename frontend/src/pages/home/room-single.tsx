@@ -7,9 +7,13 @@ import {
   LogOutIcon,
   MicOff,
   SettingsIcon,
-  UserIcon
+  UserIcon,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../components/ui/avatar";
 import { Button } from "../../components/ui/button";
 import { ButtonGroup } from "../../components/ui/button-group";
 import {
@@ -26,6 +30,7 @@ import {
 } from "../../components/ui/tooltip";
 import type { IRoom, IUser } from "../../interfaces";
 import { Languages } from "../../types";
+import { useMemo } from "react";
 
 const RoomSingle = ({
   copyId,
@@ -38,13 +43,18 @@ const RoomSingle = ({
     .filter(Boolean)
     .join(", ");
 
+  const userInitials = useMemo(() => {
+    if (!props.owner) return "";
+    return props.owner.fullName
+      .split(" ")
+      .map((word: string) => word[0])
+      .join("");
+  }, [props]);
+
   return (
     <div className="p-4 outline-2 outline-gray-5 border-b-4 border-gray-5 rounded-xl bg-gray-1 shadow-sm h-64 flex flex-col justify-between">
       <div className="flex justify-between">
         <div className="flex flex-col gap-1">
-          {/* <div className="font-bold text-xl text-gray-10 gap-1">
-            {topicLabels && <span>{topicLabels}</span>}
-          </div> */}
           <div className="font-bold text-lg text-gray-10 gap-1">
             {languageLabels && <span>{languageLabels}</span>}
           </div>
@@ -112,17 +122,17 @@ const RoomSingle = ({
       <div className="flex justify-between items-center">
         <div className="flex items-start gap-3">
           <Avatar className="size-9">
-            <AvatarImage alt="@shadcn" src="https://github.com/shadcn.png" />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarImage alt={props.owner?.fullName} src={props?.owner?.avatar_url} />
+            <AvatarFallback>{userInitials}</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 justify-center">
             <div className="flex items-center gap-1 font-semibold leading-none tracking-tight">
               {props.owner?.fullName}{" "}
               <BadgeCheckIcon className="size-4.5 fill-blue-500 text-white" />
             </div>
-            <span className="text-muted-foreground text-xs leading-none">
+            {/* <span className="text-muted-foreground text-xs leading-none">
               5 followers
-            </span>
+            </span> */}
           </div>
         </div>
         <div className="flex items-center gap-2">

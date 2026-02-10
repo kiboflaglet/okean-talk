@@ -1,13 +1,14 @@
 import {
   HomeIcon,
-  Languages,
+  Languages as LangIcon,
   Lightbulb,
   LogOutIcon,
   Search,
   Settings,
   SettingsIcon,
-  Users
+  Users,
 } from "lucide-react";
+import Select, { type MultiValue } from "react-select";
 import {
   Avatar,
   AvatarFallback,
@@ -17,7 +18,7 @@ import { Button } from "../../components/ui/button";
 
 import { supabase } from "../../lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
-import { useMemo, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useLoaderData } from "react-router";
 import {
   DropdownMenu,
@@ -39,10 +40,20 @@ import {
 import { RoomCreate } from "./room-create";
 import Rooms from "./rooms";
 import SignInButton from "./sign-in-button";
+import { Languages, type TLanguage } from "../../../src/types";
+import { useRoomsContext } from "../../provider/roomsContext";
 
 const Home = () => {
   const user: User = useLoaderData();
   const [signOutLoading, setSignOutLoading] = useTransition();
+  const [searchQuery, setSearchQuery] = useState<string | null>(null)
+  const [selectedLanguages, setSelectedLanguages] = useState<TLanguage[]>([]);
+  const {setFilters} = useRoomsContext()
+  useEffect(() => {
+    setFilters({languages: selectedLanguages.map(item => item.value)})
+  }, [selectedLanguages, ])
+
+
   const userInitials = useMemo(() => {
     if (!user) return "";
     return user.user_metadata.full_name
@@ -152,40 +163,46 @@ const Home = () => {
               <InputGroupAddon className="text-xs text-gray-9">
                 <Search />
               </InputGroupAddon>
-              <InputGroupInput className="text-xs " placeholder="Search ..." />
+              <InputGroupInput
+              onChange={(e) => 
+                setFilters({searchQuery: e.target.value})
+              }
+              className="text-xs " placeholder="Search ..." />
             </InputGroup>
           </div>
           <div className="flex items-center gap-2 ">
-            <Button
-              className="rounded-2xl bg-gray-4 text-gray-12 hover:bg-gray-5"
-              size={"sm"}
-            >
-              <Lightbulb />
-              <span className="font-bold">Filter by topic:</span>
-              <span>Any</span>
-            </Button>
-
-            <Button
-              className="rounded-2xl bg-gray-4 text-gray-12 hover:bg-gray-5"
-              size={"sm"}
-            >
-              <Languages />
-              <span className="font-bold">Filter by language:</span>
-              <span>Any</span>
-            </Button>
+            <div style={{ width: 400 }}>
+              <Select
+                isMulti
+                options={Languages}
+                value={selectedLanguages}
+                onChange={
+                  (newValue: MultiValue<TLanguage>) =>
+                    setSelectedLanguages([...newValue]) // convert readonly array to mutable
+                }
+                closeMenuOnSelect={false}
+                hideSelectedOptions={false}
+                placeholder={
+                  <div className="flex items-center gap-1">
+                    <LangIcon className={"w-4 h-4"} />
+                    <span className="font-bold">Filter by language:</span>
+                    <span>
+                      {selectedLanguages.length
+                        ? selectedLanguages.map((s) => s.label).join(", ")
+                        : "Any"}
+                    </span>
+                  </div>
+                }
+                menuPlacement="auto"
+                menuPosition="absolute"
+                classNamePrefix={"react-select"}
+                className="select-style"
+              />
+            </div>
           </div>
         </div>
 
         <Rooms />
-
-        {/* <section className="grid grid-cols-1 gap-6  pb-10 md:grid-cols-2 lg:grid-cols-3 mt-6">
-          <div className="h-64 rounded-xl border border-[var(--color-gray-4)] bg-[var(--color-gray-1)] shadow-sm"></div>
-          <div className="h-64 rounded-xl border border-[var(--color-gray-4)] bg-[var(--color-gray-1)] shadow-sm"></div>
-          <div className="h-64 rounded-xl border border-[var(--color-gray-4)] bg-[var(--color-gray-1)] shadow-sm"></div>
-          <div className="h-64 rounded-xl border border-[var(--color-gray-4)] bg-[var(--color-gray-1)] shadow-sm"></div>
-          <div className="h-64 rounded-xl border border-[var(--color-gray-4)] bg-[var(--color-gray-1)] shadow-sm"></div>
-          <div className="h-64 rounded-xl border border-[var(--color-gray-4)] bg-[var(--color-gray-1)] shadow-sm"></div>
-        </section> */}
       </main>
     </div>
   );
