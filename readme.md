@@ -3,7 +3,7 @@
 https://dribbble.com/shots/24998881-Rentable-Rental-Order-Card-View-in-SaaS-Rental-Management
 
 ## User stories
-
+```
 | User can login with google account |   • Google OAuth
   • Supabase
   • https://www.youtube.com/watch?v=2SEz6SK_ekE
