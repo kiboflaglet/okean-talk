@@ -6,8 +6,8 @@ import { TooltipProvider } from "./components/ui/tooltip.tsx";
 import { Provider } from "react-redux";
 import store from "./app/store.ts";
 import { createBrowserRouter, redirect, RouterProvider } from "react-router";
-import Room from "./pages/protected/room/room.tsx";
 import { supabase } from "./lib/supabaseClient.ts";
+import Room from "./pages/protected/room/Room.tsx";
 
 async function requireAuth() {
   const { data } = await supabase.auth.getSession();
