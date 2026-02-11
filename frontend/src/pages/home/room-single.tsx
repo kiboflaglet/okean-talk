@@ -30,14 +30,21 @@ import {
 } from "../../components/ui/tooltip";
 import type { IRoom, IUser } from "../../interfaces";
 import { Languages } from "../../types";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { cn } from "../../lib/utils";
 
-const RoomSingle = ({
-  copyId,
-  ...props
-}: IRoom & {
-  copyId: () => void;
-}) => {
+const RoomSingle = ({ ...props }: IRoom) => {
+  const [copyPing, setCopyPing] = useState(false);
+
+  const copyId = () => {
+    // your copy logic
+    navigator.clipboard.writeText(props.id);
+
+    // trigger ping
+    setCopyPing(true);
+    // remove ping after animation duration (~0.75s)
+    setTimeout(() => setCopyPing(false), 750);
+  };
   const languageLabels = props.languages
     .map((l) => Languages.find((i) => i.value === l)?.label)
     .filter(Boolean)
@@ -64,9 +71,9 @@ const RoomSingle = ({
           <Button
             onClick={copyId}
             size={"lg"}
-            className="bg-gray-5 text-gray-12 hover:bg-gray-6 "
+            className="bg-gray-5 relative text-gray-12 hover:bg-gray-6 "
           >
-            <Copy />
+            <Copy className={cn("relative z-10", copyPing && "animate-ping")}  />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -120,19 +127,21 @@ const RoomSingle = ({
       </div>
 
       <div className="flex justify-between items-center">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-2">
           <Avatar className="size-9">
-            <AvatarImage alt={props.owner?.fullName} src={props?.owner?.avatar_url} />
+            <AvatarImage
+              alt={props.owner?.fullName}
+              src={props?.owner?.avatar_url}
+            />
             <AvatarFallback>{userInitials}</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col gap-1 justify-center">
-            <div className="flex items-center gap-1 font-semibold leading-none tracking-tight">
+          <div className="flex flex-col gap-2 justify-between">
+            <div className="flex  font-semibold leading-none tracking-tight">
               {props.owner?.fullName}{" "}
-              <BadgeCheckIcon className="size-4.5 fill-blue-500 text-white" />
             </div>
-            {/* <span className="text-muted-foreground text-xs leading-none">
-              5 followers
-            </span> */}
+            <span className="text-muted-foreground text-xs leading-none">
+              Room owner
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
