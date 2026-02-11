@@ -5,7 +5,7 @@ import {
   Search,
   Settings,
   SettingsIcon,
-  Users
+  Users,
 } from "lucide-react";
 import Select, { type MultiValue } from "react-select";
 import {
@@ -14,10 +14,9 @@ import {
   AvatarImage,
 } from "../../components/ui/avatar";
 
-import type { User } from "@supabase/supabase-js";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useLoaderData } from "react-router";
-import { Languages, type TLanguage } from "../../../src/types";
+import { Languages, type HomeLoader, type TLanguage } from "../../../src/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,18 +41,17 @@ import Rooms from "./rooms";
 import SignInButton from "./sign-in-button";
 
 const Home = () => {
-  const user: User = useLoaderData();
+  const user: HomeLoader = useLoaderData();
   const [signOutLoading, setSignOutLoading] = useTransition();
   const [selectedLanguages, setSelectedLanguages] = useState<TLanguage[]>([]);
-  const {setFilters} = useRoomsContext()
+  const { setFilters } = useRoomsContext();
   useEffect(() => {
-    setFilters({languages: selectedLanguages.map(item => item.value)})
-  }, [selectedLanguages, ])
-
+    setFilters({ languages: selectedLanguages.map((item) => item.value) });
+  }, [selectedLanguages]);
 
   const userInitials = useMemo(() => {
-    if (!user) return "";
-    return user.user_metadata.full_name
+    if (!user?.userData) return "";
+    return user.userData?.fullName
       .split(" ")
       .map((word: string) => word[0])
       .join("");
@@ -107,13 +105,13 @@ const Home = () => {
           <div className="h-6 w-6 rounded  flex justify-center items-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                {user ? (
+                {user?.userData? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Avatar className="size-9">
                         <AvatarImage
-                          alt={user.user_metadata.full_name}
-                          src={user.user_metadata.avatar_url}
+                          alt={user?.userData?.fullName}
+                          src={user.userData?.avatar_url}
                         />
                         <AvatarFallback>{userInitials}</AvatarFallback>
                       </Avatar>
@@ -161,10 +159,10 @@ const Home = () => {
                 <Search />
               </InputGroupAddon>
               <InputGroupInput
-              onChange={(e) => 
-                setFilters({searchQuery: e.target.value})
-              }
-              className="text-xs " placeholder="Search ..." />
+                onChange={(e) => setFilters({ searchQuery: e.target.value })}
+                className="text-xs "
+                placeholder="Search ..."
+              />
             </InputGroup>
           </div>
           <div className="flex items-center gap-2 ">
@@ -198,7 +196,6 @@ const Home = () => {
             </div>
           </div>
         </div>
-
         <Rooms />
       </main>
     </div>

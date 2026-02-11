@@ -1,10 +1,14 @@
+import { useRoomsContext } from "../../provider/roomsContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dice4, Loader } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Select from "react-select";
 import { Button } from "../../components/ui/button";
-import { ButtonGroup } from "../../components/ui/button-group";
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+} from "../../components/ui/button-group";
 import {
   Dialog,
   DialogClose,
@@ -14,14 +18,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../components/ui/dialog";
-import { Field, FieldGroup, FieldLabel } from "../../components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "../../components/ui/field";
 import { Input } from "../../components/ui/input";
 import { RandomTopics } from "../../data";
-import type { IRoom } from "../../interfaces";
-import { Languages } from "../../types";
+import { Languages, type HomeLoader } from "../../types";
 import { roomSchema, type RoomFormValues } from "./roomSchema";
+import { useLoaderData } from "react-router";
 
 export function RoomCreate() {
+  const { addRoom } = useRoomsContext();
+  const loaderData: HomeLoader = useLoaderData();
   const [randomAvaialableCount, setRandomAvaialableCount] = useState<number>(3);
   const [loadingRandomTopic, setLoadingRandomTopic] = useTransition();
   const [loadingForm, setLoadingForm] = useTransition();
@@ -45,29 +56,27 @@ export function RoomCreate() {
   };
 
   const pickRandomTopic = async () => {
-    if (randomAvaialableCount > 0) {
-      setLoadingRandomTopic(async () => {
-        const randomIndex = Math.floor(Math.random() * RandomTopics.length);
-        const randomTopic = RandomTopics[randomIndex];
-        setRandomAvaialableCount(randomAvaialableCount - 1);
-        await sleep(400, "processing the random topic");
-        form.setValue("topic", randomTopic);
-      });
-    }
+    setLoadingRandomTopic(async () => {
+      const randomIndex = Math.floor(Math.random() * RandomTopics.length);
+      const randomTopic = RandomTopics[randomIndex];
+      setRandomAvaialableCount(randomAvaialableCount - 1);
+      await sleep(400, "processing the random topic");
+      form.setValue("topic", randomTopic);
+    });
   };
 
   const onSubmit = (data: RoomFormValues) => {
+    if (!loaderData?.userData) return;
+
     setLoadingForm(() => {
-      const request: IRoom = {
-        id: crypto.randomUUID(),
+      addRoom({
         topic: data.topic,
-        ownerId: "user-1",
         languages: data.languages,
-        createdAt: new Date().toUTCString(),
         maxParticipants: data.maxParticipants,
-      };
+        ownerId: loaderData.userData?.id,
+      });
+
       setRoomCreateFormOpen(false);
-      console.log(data);
     });
   };
 
@@ -96,18 +105,29 @@ export function RoomCreate() {
               render={({ field }) => (
                 <Field>
                   <FieldLabel htmlFor={field.name}>Topic</FieldLabel>
-                  <ButtonGroup>
-                    <Input {...field} id={field.name} placeholder="" />
+                  <ButtonGroup className="items-center">
+                    <Input
+                      className="bg-gray-12 text-gray-1 outline-none border-none  "
+                      {...field}
+                      id={field.name}
+                      placeholder=""
+                    />
+                    <ButtonGroupSeparator>
+                      <div className="h-full w-2  bg-gray-1"></div>
+                    </ButtonGroupSeparator>
                     <Button
-                      onClick={pickRandomTopic}
-                      disabled={
-                        randomAvaialableCount <= 0 || loadingRandomTopic
-                      }
+                      className="h-8.5 group"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        pickRandomTopic();
+                      }}
                     >
-                      <Dice4 /> Random ({randomAvaialableCount}){" "}
-                      {loadingRandomTopic && (
+                      {loadingRandomTopic ? (
                         <Loader className="animate-spin" />
-                      )}
+                      ) : (
+                        <Dice4 className="group-hover:animate-pulse " />
+                      )}{" "}
+                      Random
                     </Button>
                   </ButtonGroup>
                 </Field>
@@ -117,7 +137,7 @@ export function RoomCreate() {
               <Controller
                 name="languages"
                 control={form.control}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Field>
                     <FieldLabel>Select language</FieldLabel>
                     <Select
@@ -130,6 +150,9 @@ export function RoomCreate() {
                         field.onChange(selected.map((opt) => opt.value));
                       }}
                     />
+                    {fieldState.error && (
+                      <FieldError>Pick up a language</FieldError>
+                    )}
                   </Field>
                 )}
               />

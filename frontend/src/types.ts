@@ -1,3 +1,9 @@
+import type { User } from "@supabase/supabase-js"
+import type { IUser } from "./interfaces"
+
+export type HomeLoader = {
+  userData?: IUser
+}
 export const Topics = [
     {key: "it", value: "IT"},
     {key: "music", value: "Music"},
