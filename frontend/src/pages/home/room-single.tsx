@@ -1,5 +1,4 @@
 import {
-  BadgeCheckIcon,
   ChevronRight,
   Copy,
   CreditCardIcon,
@@ -7,9 +6,9 @@ import {
   LogOutIcon,
   MicOff,
   SettingsIcon,
-  UserIcon,
-  X,
+  UserIcon
 } from "lucide-react";
+import { useMemo, useState } from "react";
 import {
   Avatar,
   AvatarFallback,
@@ -30,9 +29,8 @@ import {
   TooltipTrigger,
 } from "../../components/ui/tooltip";
 import type { IRoom, IUser } from "../../interfaces";
-import { Languages } from "../../types";
-import { useMemo, useState } from "react";
 import { cn } from "../../lib/utils";
+import { Languages } from "../../types";
 
 type RoomSingleProps = IRoom & {
   joinRoom: () => void;
@@ -114,7 +112,7 @@ const RoomSingle = ({ joinRoom, ...props }: RoomSingleProps) => {
 
       <div className="flex gap-2 flex-wrap">
         {props?.users?.map((item) => (
-          <UserInRoomCard key={item.id} {...item} />
+          <UserInRoomCard key={item.participant.id} {...item} />
         ))}
         {Array.from(
           { length: props.maxParticipants - (props.users?.length || 0) },
@@ -181,19 +179,21 @@ const RoomSingle = ({ joinRoom, ...props }: RoomSingleProps) => {
 
 export default RoomSingle;
 
-type UserInRoomCardProps = IUser;
+type UserInRoomCardProps = {
+  participant: IUser
+};
 
 function UserInRoomCard({ ...props }: UserInRoomCardProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Avatar className="size-9">
-          <AvatarImage alt="@shadcn" src="https://github.com/shadcn.png" />
+          <AvatarImage alt="okean-talk" src={props.participant.avatar_url} />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
       </TooltipTrigger>
       <TooltipContent className="text-sm" side="top" sideOffset={10}>
-        {props.fullName}
+        {props.participant.fullName}
       </TooltipContent>
     </Tooltip>
   );
