@@ -8,6 +8,7 @@ import {
   MicOff,
   SettingsIcon,
   UserIcon,
+  X,
 } from "lucide-react";
 import {
   Avatar,
@@ -33,17 +34,19 @@ import { Languages } from "../../types";
 import { useMemo, useState } from "react";
 import { cn } from "../../lib/utils";
 
-const RoomSingle = ({ ...props }: IRoom) => {
+type RoomSingleProps = IRoom & {
+  joinRoom: () => void;
+};
+
+const RoomSingle = ({ joinRoom, ...props }: RoomSingleProps) => {
   const [copyPing, setCopyPing] = useState(false);
 
-  const copyId = () => {
-    // your copy logic
-    navigator.clipboard.writeText(props.id);
+  const isRoomFull = props.maxParticipants - (props.users?.length || 0) <= 0;
 
-    // trigger ping
+  const copyId = () => {
+    navigator.clipboard.writeText(`http://localhost:5173/room/${props.id}`);
     setCopyPing(true);
-    // remove ping after animation duration (~0.75s)
-    setTimeout(() => setCopyPing(false), 750);
+    setTimeout(() => setCopyPing(false), 1000);
   };
   const languageLabels = props.languages
     .map((l) => Languages.find((i) => i.value === l)?.label)
@@ -73,7 +76,7 @@ const RoomSingle = ({ ...props }: IRoom) => {
             size={"lg"}
             className="bg-gray-5 relative text-gray-12 hover:bg-gray-6 "
           >
-            <Copy className={cn("relative z-10", copyPing && "animate-ping")}  />
+            <Copy className={cn("relative z-10", copyPing && "animate-ping")} />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -146,9 +149,30 @@ const RoomSingle = ({ ...props }: IRoom) => {
         </div>
         <div className="flex items-center gap-2">
           <MicOff className="w-4 h-4 text-gray-9" />
-          <Button className="bg-gray-12 rounded-full w-9.5  p-1 mr-1">
-            <ChevronRight className="text-gray-1" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-block">
+                <Button
+                  // disabled={isRoomFull}
+                  onClick={() => {
+                    joinRoom();
+                  }}
+                  className={cn(
+                    "bg-gray-12 rounded-full w-9.5 p-1 mr-1",
+                    isRoomFull && "bg-red-300 hover:bg-red-200"
+                  )}
+                >
+                  <ChevronRight className="text-gray-1" />
+                </Button>
+              </span>
+            </TooltipTrigger>
+
+            {isRoomFull && (
+              <TooltipContent side="top" sideOffset={10}>
+                This room is already full
+              </TooltipContent>
+            )}
+          </Tooltip>
         </div>
       </div>
     </div>

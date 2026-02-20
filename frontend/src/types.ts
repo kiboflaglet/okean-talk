@@ -1,8 +1,12 @@
 import type { User } from "@supabase/supabase-js"
-import type { IUser } from "./interfaces"
+import type { IRoom, IUser } from "./interfaces"
 
 export type HomeLoader = {
   userData?: IUser
+}
+export type RoomLoader = {
+  userData?: IUser
+  roomData?: IRoom
 }
 export const Topics = [
     {key: "it", value: "IT"},

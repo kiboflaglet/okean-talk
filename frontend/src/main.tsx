@@ -1,22 +1,59 @@
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, redirect, RouterProvider } from "react-router";
+import {
+  createBrowserRouter,
+  redirect,
+  RouterProvider,
+  type LoaderFunctionArgs,
+} from "react-router";
 import App from "./App.tsx";
 import { TooltipProvider } from "./components/ui/tooltip.tsx";
 import "./index.css";
 import { supabase } from "./lib/supabaseClient.ts";
 import Room from "./pages/protected/room/Room.tsx";
 import { RoomsProvider } from "./provider/roomsContext.tsx";
-import type { HomeLoader } from "./types.ts";
+import type { HomeLoader, RoomLoader } from "./types.ts";
 
-async function requireAuth() {
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) {
-    throw redirect("/"); // acts like middleware redirect
+async function roomLoader({ params }: LoaderFunctionArgs) {
+  const { id: roomId } = params;
+  if (!roomId) {
+    throw new Response("Not Found", { status: 404 });
   }
-  return data.session.user;
+  const { data: sessionData } = await supabase.auth.getSession();
+
+  const authUser = sessionData?.session?.user;
+  if (!authUser) {
+    throw redirect("/");
+  }
+
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("auth_id", authUser.id)
+    .single();
+
+  if (userError) {
+    throw redirect("/");
+  }
+
+  const { data: roomData, error: roomError } = await supabase
+    .from("rooms")
+    .select(
+      `*, users:roomparticipants (
+       participant:users!roomparticipants_participantid_fkey(*)
+      )`
+    )
+    .eq("id", roomId)
+    .single();
+
+  const data: RoomLoader = {
+    userData,
+    roomData: roomError ? null : roomData,
+  };
+
+  return data;
 }
 
-async function getUser() {
+async function homeLoader() {
   const { data: sessionData } = await supabase.auth.getSession();
   const authUser = sessionData?.session?.user;
   if (!authUser) return null;
@@ -24,8 +61,8 @@ async function getUser() {
   const { data: userData, error } = await supabase
     .from("users")
     .select("*")
-    .eq("auth_id", authUser.id) // assuming your users table has auth_id column
-    .single(); // get one row
+    .eq("auth_id", authUser.id)
+    .single();
 
   if (error) {
     console.error("Error fetching user profile:", error);
@@ -33,12 +70,8 @@ async function getUser() {
   }
 
   const data: HomeLoader = {
-    userData
-  }
-
-
-  console.log(data)
-
+    userData,
+  };
 
   return data;
 }
@@ -47,12 +80,12 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-    loader: getUser,
+    loader: homeLoader,
   },
   {
-    path: "/room",
+    path: "/room/:id",
     element: <Room />,
-    loader: requireAuth,
+    loader: roomLoader,
   },
 ]);
 

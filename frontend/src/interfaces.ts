@@ -3,14 +3,14 @@ import type { PostgrestError } from "@supabase/supabase-js";
 export interface IUser {
   id: string;
   fullName: string;
-  avatar_url?: string
+  avatar_url?: string;
 }
 
 export interface IRoom {
   id: string;
   topic: string;
   languages: string[];
-  users?: IUser[];
+  users?: { participant: IUser }[];
   ownerId: string;
   owner?: IUser;
   createdAt: string;
@@ -23,6 +23,6 @@ export type ApiResult<T> = {
 };
 
 export interface RoomFilters {
-  searchQuery?: string | null
-  languages?: string[]
+  searchQuery?: string | null;
+  languages?: string[];
 }

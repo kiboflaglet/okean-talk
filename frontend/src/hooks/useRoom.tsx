@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { IRoom, RoomFilters } from "../interfaces";
 import { supabase } from "../lib/supabaseClient";
 import { toPgArray } from "../lib/utils";
+import type { roomParticipantCreate } from "../pages/home/roomSchema";
 
 export const useRooms = (filters?: RoomFilters) => {
   const [rooms, setRooms] = useState<IRoom[]>([]);
@@ -11,21 +12,29 @@ export const useRooms = (filters?: RoomFilters) => {
     setLoading(true);
     let query = supabase
       .from("rooms")
-      .select(`* , owner:users!rooms_ownerId_fkey(*)`)
+      .select(
+        `
+        * , 
+        owner:users!rooms_ownerId_fkey(*), 
+        users:roomparticipants (
+          participant:users!roomparticipants_participantid_fkey(*)
+      )`
+      )
       .order("created_at", { ascending: false });
     if (!!filters?.languages?.length) {
       query = query.filter("languages", "cs", toPgArray(filters?.languages));
     }
 
-   if (filters?.searchQuery) {
-  query = query.ilike("topic", `%${filters.searchQuery}%`)
-} 
+    if (filters?.searchQuery) {
+      query = query.ilike("topic", `%${filters.searchQuery}%`);
+    }
 
     const { data, error } = await query;
     if (error) setError(error.message);
     else setRooms(data || []);
     setLoading(false);
   }, [filters]);
+
   const addRoom = useCallback(async (room: Partial<IRoom>) => {
     const { data, error } = await supabase
       .from("rooms")
@@ -58,12 +67,14 @@ export const useRooms = (filters?: RoomFilters) => {
     if (error) setError(error.message);
     else setRooms((prev) => prev.filter((r) => r.id !== id));
   }, []);
+
   useEffect(() => {
     fetchRooms();
   }, [fetchRooms]);
   useEffect(() => {
     const roomsChannel = supabase
       .channel("on_rooms_change")
+      // listen to rooms table
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "rooms" },
@@ -71,10 +82,20 @@ export const useRooms = (filters?: RoomFilters) => {
           fetchRooms();
         }
       )
+      // listen to roomparticipants table
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "roomparticipants" },
+        () => {
+          fetchRooms(); // or fetchRoomData(roomId) if you want single room update
+        }
+      )
       .subscribe();
+
     return () => {
       supabase.removeChannel(roomsChannel);
     };
   }, []);
+
   return { rooms, loading, error, fetchRooms, addRoom, updateRoom, deleteRoom };
 };

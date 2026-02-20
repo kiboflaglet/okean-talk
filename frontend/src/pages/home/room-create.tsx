@@ -31,6 +31,7 @@ import { Languages, type HomeLoader } from "../../types";
 import { roomSchema, type RoomFormValues } from "./roomSchema";
 import { useLoaderData } from "react-router";
 import SignInButton from "./sign-in-button";
+import { sleep } from "../../lib/utils";
 
 export function RoomCreate() {
   const { addRoom } = useRoomsContext();
@@ -48,14 +49,7 @@ export function RoomCreate() {
     resolver: zodResolver(roomSchema),
   });
 
-  const sleep = async (ms: number, message: string) => {
-    // I believe i will use AI someday for this, but this is classic approach ig
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(message);
-      }, ms);
-    });
-  };
+
 
   const pickRandomTopic = async () => {
     setLoadingRandomTopic(async () => {
