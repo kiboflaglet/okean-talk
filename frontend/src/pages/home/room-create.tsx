@@ -1,6 +1,6 @@
 import { useRoomsContext } from "../../provider/roomsContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Dice4, Loader } from "lucide-react";
+import { Check, Dice4, Loader, Plus } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Select from "react-select";
@@ -32,9 +32,21 @@ import { roomSchema, type RoomFormValues } from "./roomSchema";
 import { useLoaderData } from "react-router";
 import SignInButton from "./sign-in-button";
 import { sleep } from "../../lib/utils";
+import { useBreakpoint } from "../../hooks/useBreakpoint";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "../../components/ui/drawer";
 
 export function RoomCreate() {
   const { addRoom } = useRoomsContext();
+  const { isMobile } = useBreakpoint();
   const loaderData: HomeLoader = useLoaderData();
   const [randomAvaialableCount, setRandomAvaialableCount] = useState<number>(3);
   const [loadingRandomTopic, setLoadingRandomTopic] = useTransition();
@@ -48,8 +60,6 @@ export function RoomCreate() {
     },
     resolver: zodResolver(roomSchema),
   });
-
-
 
   const pickRandomTopic = async () => {
     setLoadingRandomTopic(async () => {
@@ -80,11 +90,136 @@ export function RoomCreate() {
     console.log(error);
   };
 
+  if (isMobile) {
+    return (
+      <Drawer onOpenChange={setRoomCreateFormOpen} open={roomCreateFormOpen}>
+        <DrawerTrigger asChild>
+          <Button>
+            <Plus className="w-8 h-8" />
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Create a new room</DrawerTitle>
+            <DrawerDescription>
+              You can change room settings later
+            </DrawerDescription>
+          </DrawerHeader>
+          <form onSubmit={form.handleSubmit(onSubmit, onError)}>
+            <FieldGroup className="px-4">
+              <Controller
+                control={form.control}
+                name="topic"
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel htmlFor={field.name}>
+                      Topic in your head
+                    </FieldLabel>
+                    <ButtonGroup className="items-center">
+                      <Input
+                        className="bg-gray-4 text-gray-12 outline-none border text-[14px]  "
+                        {...field}
+                        id={field.name}
+                        placeholder="Custom or random topic name"
+                      />
+                      <ButtonGroupSeparator>
+                        <div className="h-full w-2  bg-gray-1"></div>
+                      </ButtonGroupSeparator>
+                      <Button
+                        className="h-8.5 group bg-gray-6 text-gray-12 hover:bg-gray-8"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          pickRandomTopic();
+                        }}
+                      >
+                        {loadingRandomTopic ? (
+                          <Loader className="animate-spin" />
+                        ) : (
+                          <Dice4 className="group-hover:animate-pulse " />
+                        )}{" "}
+                      </Button>
+                    </ButtonGroup>
+                  </Field>
+                )}
+              />
+              <Controller
+                name="languages"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Select language</FieldLabel>
+                    <Select
+                      value={Languages.filter((opt) =>
+                        field.value?.includes(opt.value)
+                      )}
+                      isMulti
+                      options={Languages}
+                      onChange={(selected) => {
+                        field.onChange(selected.map((opt) => opt.value));
+                      }}
+                      menuPlacement="top"
+                      menuPosition="absolute"
+                      classNamePrefix={"react-select"}
+                      className="select-style"
+                    />
+                    {fieldState.error && (
+                      <FieldError>Pick up a language</FieldError>
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="maxParticipants"
+                control={form.control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel>Max participants</FieldLabel>
+
+                    <Select
+                      options={Array.from({ length: 20 }, (_, i) => {
+                        const n = (i + 1).toString();
+                        return { value: n, label: n };
+                      })}
+                      value={
+                        field.value
+                          ? {
+                              value: String(field.value),
+                              label: String(field.value),
+                            }
+                          : null
+                      }
+                      onChange={(option) => field.onChange(option?.value)}
+                      isClearable
+                      menuPlacement="top"
+                      menuPosition="absolute"
+                      classNamePrefix={"react-select"}
+                      className="select-style"
+                    />
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
+            <DrawerFooter>
+              <Button type="submit" disabled={loadingForm}>
+                Create {loadingForm && <Loader className="animate-spin" />}
+              </Button>
+              <DrawerClose asChild>
+                <Button variant="outline">Cancel </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </form>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog onOpenChange={setRoomCreateFormOpen} open={roomCreateFormOpen}>
       <DialogTrigger asChild>
         <Button>
-          <span>+</span> Create room
+          <Plus className="w-8 h-8" /> {!isMobile && "Create room"}
         </Button>
       </DialogTrigger>
 
@@ -101,19 +236,21 @@ export function RoomCreate() {
                 name="topic"
                 render={({ field }) => (
                   <Field>
-                    <FieldLabel htmlFor={field.name}>Topic</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>
+                      Topic in your head
+                    </FieldLabel>
                     <ButtonGroup className="items-center">
                       <Input
-                        className="bg-gray-12 text-gray-1 outline-none border-none  "
+                        className="bg-gray-4 text-gray-12 outline-none border text-[14px]  "
                         {...field}
                         id={field.name}
-                        placeholder=""
+                        placeholder="Custom or random topic name"
                       />
                       <ButtonGroupSeparator>
                         <div className="h-full w-2  bg-gray-1"></div>
                       </ButtonGroupSeparator>
                       <Button
-                        className="h-8.5 group"
+                        className="h-8.5 group bg-gray-6 text-gray-12 hover:bg-gray-8"
                         onClick={(e) => {
                           e.preventDefault();
                           pickRandomTopic();
@@ -146,6 +283,10 @@ export function RoomCreate() {
                         onChange={(selected) => {
                           field.onChange(selected.map((opt) => opt.value));
                         }}
+                        menuPlacement="bottom"
+                        menuPosition="absolute"
+                        classNamePrefix={"react-select"}
+                        className="select-style"
                       />
                       {fieldState.error && (
                         <FieldError>Pick up a language</FieldError>
@@ -176,6 +317,10 @@ export function RoomCreate() {
                         }
                         onChange={(option) => field.onChange(option?.value)}
                         isClearable
+                           menuPlacement="bottom"
+                      menuPosition="absolute"
+                      classNamePrefix={"react-select"}
+                      className="select-style"
                       />
                     </Field>
                   )}
@@ -200,7 +345,9 @@ export function RoomCreate() {
           <>
             <DialogHeader className="mb-5">
               <DialogTitle>Sign in</DialogTitle>
-              <DialogDescription>You need to sign up to create a room</DialogDescription>
+              <DialogDescription>
+                You need to sign up to create a room
+              </DialogDescription>
             </DialogHeader>
             <SignInButton showTitle />
           </>

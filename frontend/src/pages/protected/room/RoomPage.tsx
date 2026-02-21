@@ -1,5 +1,6 @@
 import type { IRoom, IUser } from "@/src/interfaces";
 import {
+  ArrowRight,
   Copy,
   Ellipsis,
   Loader,
@@ -65,7 +66,7 @@ const RoomPage = () => {
         return;
       }
 
-      await fetchRoom(); // your function to update roomData from DB
+      await fetchRoom();
 
       const alreadyJoined = roomData?.users?.find(
         (item) => item.participant.id === roomLoader.userData?.id
@@ -193,26 +194,16 @@ const RoomPage = () => {
 
   if (!userJoined) {
     return (
-      <div className="p-4 flex flex-col h-screen gap-2 justify-center items-center">
+      <div className="p-4 flex flex-col h-screen gap-4 justify-center items-center">
         {error && <>{error}</>}
-        <div className="bg-gray-5 w-50 h-50">
-          <div className="flex flex-col items-center">
-            <Avatar className="size-9">
-              <AvatarImage
-                alt={roomLoader.userData?.fullName}
-                src={roomLoader.userData?.avatar_url}
-              />
-              <AvatarFallback>{userInitials}</AvatarFallback>
-            </Avatar>
-            <div>
-              <Button className="bg-gray-7 text-gray-12 hover:bg-red-400/60">
-                <MicOff />
-              </Button>
-              <Button className="bg-gray-7 text-gray-12 hover:bg-gray-6/50">
-                <VideoOff />
-              </Button>
-            </div>
-          </div>
+        <div className="flex flex-col items-center ">
+          <Avatar className="size-18">
+            <AvatarImage
+              alt={roomLoader.userData?.fullName}
+              src={roomLoader.userData?.avatar_url}
+            />
+            <AvatarFallback>{userInitials}</AvatarFallback>
+          </Avatar>
         </div>
         <Button onClick={joinRoom} disabled={userJoinLoading}>
           {" "}
@@ -222,7 +213,7 @@ const RoomPage = () => {
               Joining <Loader className="animate-spin" />
             </>
           ) : (
-            <>Join room</>
+            <>Join the room <ArrowRight /></>
           )}
         </Button>
       </div>
