@@ -200,3 +200,26 @@
 .select-style .react-select__indicator {
   @apply p-0  w-5 h-5 hover:text-gray-12 focus:text-gray-12 ;
 }
+
+
+.scroll-follow-button {
+  position: relative; /* for absolute children */
+  padding: 20px;
+  padding-top: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.scroll-follow-button::after {
+  content: "";
+  position: absolute; /* float over button */
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* center perfectly */
+  background-image: url('/arrow-down.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+}

@@ -5,13 +5,11 @@ import {
   Loader,
   Mic,
   MicOff,
-  Send,
   SettingsIcon,
-  VideoOff
+  VideoOff,
 } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useLoaderData } from "react-router";
-import ScrollToBottom from "react-scroll-to-bottom";
 import {
   Avatar,
   AvatarFallback,
@@ -25,20 +23,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "../../../components/ui/input-group";
 import { supabase } from "../../../lib/supabaseClient";
-import { cn } from "../../../lib/utils";
 import { Languages, type RoomLoader } from "../../../types";
 import {
   roomParticipantCreateSchema,
   type roomParticipantCreate,
 } from "../../home/roomSchema";
+import Chat from "./Chat";
 
-const Room = () => {
+const RoomPage = () => {
   const roomLoader: RoomLoader = useLoaderData();
   const [roomId] = useState<string | null>(roomLoader.roomData?.id || null);
   const [roomData, setRoomData] = useState(roomLoader.roomData);
@@ -198,7 +191,6 @@ const Room = () => {
     return () => window.removeEventListener("beforeunload", handler);
   }, []);
 
-
   if (!userJoined) {
     return (
       <div className="p-4 flex flex-col h-screen gap-2 justify-center items-center">
@@ -242,7 +234,7 @@ const Room = () => {
       <div className=" border-b border-gray-7 p-4 h-20 flex justify-between items-center">
         <div className="flex flex-col gap-2">
           <h1 className="text-lg">{roomLoader.roomData?.topic}</h1>
-          <div>
+          <div className="flex gap-2 items-center">
             {roomLoader.roomData?.languages.map((item, index) => (
               <span
                 key={"lang-" + index}
@@ -254,7 +246,7 @@ const Room = () => {
           </div>
         </div>
         <div className="flex gap-4">
-          <Button variant={'ghost'}>
+          <Button variant={"ghost"}>
             <SettingsIcon />
           </Button>
 
@@ -280,7 +272,7 @@ const Room = () => {
       </div>
       <div className="flex-1 p-4 flex gap-4 justify-between min-h-0">
         <div className="w-full flex flex-col">
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center items-center gap-4">
             {roomData?.users?.map((item) => (
               <UserCard {...item} />
             ))}
@@ -339,26 +331,17 @@ const Room = () => {
             </div>
           </div>
         </div>
-        <div className="bg-gray-5 w-1/3 px-4 py-2 pt-0 rounded-xl shrink-0 flex flex-col min-h-0 overflow-hidden">
-          <Messages />
-          <InputGroup className="mt-2 bg-gray-1 py-7 px-1">
-            <InputGroupInput
-              placeholder="Write a message"
-              className="bg-gray-1 "
-            />
-            <InputGroupAddon align={"inline-end"}>
-              <Button className="bg-blue-400 text-gray-12 hover:bg-blue-500">
-                <Send />
-              </Button>
-            </InputGroupAddon>
-          </InputGroup>
-        </div>
+        <Chat
+          user={roomLoader.userData}
+          roomId={roomId || ""}
+          userId={roomLoader.userData?.id || ""}
+        />
       </div>
     </div>
   );
 };
 
-export default Room;
+export default RoomPage;
 
 type UserCardProps = {
   participant: IUser;
@@ -378,47 +361,6 @@ function UserCard({ ...props }: UserCardProps) {
         <Mic className="w-5 h-5" />
       </div>
       <div className="text-2xl">{userInitials}</div>
-    </div>
-  );
-}
-
-function Messages() {
-  return (
-    <ScrollToBottom
-      scrollViewClassName="flex flex-col gap-2 no-scrollbar"
-      className="min-h-0 overflow-y-auto"
-    >
-      <MessageSingle />
-      <MessageSingle />
-      <MessageSingle owner />
-      <MessageSingle owner />
-      <MessageSingle />
-      <MessageSingle />
-      <MessageSingle />
-      <MessageSingle />
-      <MessageSingle />
-      <MessageSingle />
-      <MessageSingle />
-      <MessageSingle />
-      <MessageSingle />
-    </ScrollToBottom>
-  );
-}
-
-type MessageSingleProps = {
-  owner?: boolean;
-};
-
-function MessageSingle({ owner = false }: MessageSingleProps) {
-  return (
-    <div
-      className={cn(
-        "p-3 rounded-xl w-max",
-        owner ? "bg-gray-4 ml-auto text-right" : "bg-gray-1"
-      )}
-    >
-      <h3 className="font-semibold">Rendra</h3>
-      <p>I think this is some message</p>
     </div>
   );
 }

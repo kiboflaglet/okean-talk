@@ -1,4 +1,5 @@
 import type { PostgrestError } from "@supabase/supabase-js";
+import type { MessageStatus } from "./types";
 
 export interface IUser {
   id: string;
@@ -15,6 +16,17 @@ export interface IRoom {
   owner?: IUser;
   createdAt: string;
   maxParticipants: number;
+}
+
+export interface IMessage {
+  id: string;
+  roomId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  user?: IUser;
+  tempId: string;
+  status: MessageStatus
 }
 
 export type ApiResult<T> = {

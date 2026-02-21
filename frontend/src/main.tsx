@@ -9,7 +9,7 @@ import App from "./App.tsx";
 import { TooltipProvider } from "./components/ui/tooltip.tsx";
 import "./index.css";
 import { supabase } from "./lib/supabaseClient.ts";
-import Room from "./pages/protected/room/Room.tsx";
+import RoomPage from "./pages/protected/room/RoomPage.tsx";
 import { RoomsProvider } from "./provider/roomsContext.tsx";
 import type { HomeLoader, RoomLoader } from "./types.ts";
 
@@ -84,7 +84,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/room/:id",
-    element: <Room />,
+    element: <RoomPage />,
     loader: roomLoader,
   },
 ]);

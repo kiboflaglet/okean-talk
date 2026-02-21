@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import type { IRoom, RoomFilters } from "../interfaces";
 import { supabase } from "../lib/supabaseClient";
 import { toPgArray } from "../lib/utils";
-import type { roomParticipantCreate } from "../pages/home/roomSchema";
 
 export const useRooms = (filters?: RoomFilters) => {
   const [rooms, setRooms] = useState<IRoom[]>([]);
