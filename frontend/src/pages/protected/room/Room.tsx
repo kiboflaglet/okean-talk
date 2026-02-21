@@ -1,19 +1,42 @@
-import { Ellipsis, Loader, MicOff, Video, VideoOff } from "lucide-react";
+import type { IRoom, IUser } from "@/src/interfaces";
+import {
+  Copy,
+  Ellipsis,
+  Loader,
+  Mic,
+  MicOff,
+  Send,
+  SettingsIcon,
+  VideoOff
+} from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useLoaderData } from "react-router";
+import ScrollToBottom from "react-scroll-to-bottom";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "../../../components/ui/avatar";
 import { Button } from "../../../components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../../components/ui/dropdown-menu";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "../../../components/ui/input-group";
 import { supabase } from "../../../lib/supabaseClient";
-import type { RoomLoader } from "../../../types";
+import { cn } from "../../../lib/utils";
+import { Languages, type RoomLoader } from "../../../types";
 import {
   roomParticipantCreateSchema,
   type roomParticipantCreate,
 } from "../../home/roomSchema";
-import type { IRoom, IUser } from "@/src/interfaces";
 
 const Room = () => {
   const roomLoader: RoomLoader = useLoaderData();
@@ -175,7 +198,6 @@ const Room = () => {
     return () => window.removeEventListener("beforeunload", handler);
   }, []);
 
-  // return <>{JSON.stringify(roomData)}</>;
 
   if (!userJoined) {
     return (
@@ -216,51 +238,122 @@ const Room = () => {
   }
 
   return (
-    <div className="p-4 flex h-screen gap-2 justify-between">
-      <div className="w-full flex flex-col">
-        <div className=" w-full flex-1">{JSON.stringify(roomData)}</div>
-        <div className="flex justify-center items-center">
-          {roomData?.users?.map((item) => (
-            <UserCard {...item} />
-          ))}
-        </div>
-        <div>
-          <div className="flex justify-between">
-            <span></span>
-            <div>
-              <Button className="bg-red-400 text-gray-12 hover:bg-red-400/60">
-                <MicOff />
-              </Button>
-              <Button className="bg-gray-6 text-gray-12 hover:bg-gray-6/50">
-                <Video />
-              </Button>
-              <Button className="bg-gray-6 text-gray-12 hover:bg-gray-6/50">
-                <Ellipsis />
-              </Button>
-            </div>
-            <div>
-              <Button
-                className="bg-red-400 text-gray-12 hover:bg-red-400/60"
-                onClick={() => {
-                  leaveRoom(roomId);
-                }}
-                disabled={userLeaveLoading}
+    <div className=" bg-gray-1 h-screen flex flex-col">
+      <div className=" border-b border-gray-7 p-4 h-20 flex justify-between items-center">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-lg">{roomLoader.roomData?.topic}</h1>
+          <div>
+            {roomLoader.roomData?.languages.map((item, index) => (
+              <span
+                key={"lang-" + index}
+                className="bg-gray-7 rounded-lg px-2 py-1 "
               >
-                {" "}
-                {userLeaveLoading ? (
-                  <>
-                    {" "}
-                    Leaving <Loader className="animate-spin" />
-                  </>
-                ) : (
-                  <>Leave room</>
-                )}
-              </Button>
+                {Languages.find((l) => l.value === item)?.label}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <Button variant={'ghost'}>
+            <SettingsIcon />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar className="size-9">
+                <AvatarImage
+                  alt={roomLoader?.userData?.fullName}
+                  src={roomLoader.userData?.avatar_url}
+                />
+                <AvatarFallback>{userInitials}</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="z-40" side="left">
+              <DropdownMenuItem>
+                <SettingsIcon />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <div className="flex-1 p-4 flex gap-4 justify-between min-h-0">
+        <div className="w-full flex flex-col">
+          <div className="flex justify-center items-center">
+            {roomData?.users?.map((item) => (
+              <UserCard {...item} />
+            ))}
+          </div>
+          <div className=" w-full flex-1"></div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Button
+                  className="bg-red-500 text-gray-12 hover:bg-red-400"
+                  onClick={() => {
+                    leaveRoom(roomId);
+                  }}
+                  disabled={userLeaveLoading}
+                >
+                  {" "}
+                  {userLeaveLoading ? (
+                    <>
+                      {" "}
+                      Leaving <Loader className="animate-spin" />
+                    </>
+                  ) : (
+                    <>Leave Room</>
+                  )}
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button className="bg-red-500 text-gray-12 hover:bg-red-400">
+                  <MicOff />
+                </Button>
+                <Button className="bg-red-500 text-gray-12 hover:bg-red-400">
+                  <VideoOff />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="bg-gray-6 text-gray-12 hover:bg-gray-6/50">
+                      <Ellipsis />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="z-40" side="top">
+                    <DropdownMenuItem>
+                      <SettingsIcon />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <span>
+                <Button className="bg-gray-6 text-gray-12 hover:bg-gray-6/50">
+                  {roomId?.slice(0, 15)}...{" "}
+                  <span className="text-gray-10">|</span> <Copy />
+                </Button>
+              </span>
             </div>
           </div>
         </div>
+        <div className="bg-gray-5 w-1/3 px-4 py-2 pt-0 rounded-xl shrink-0 flex flex-col min-h-0 overflow-hidden">
+          <Messages />
+          <InputGroup className="mt-2 bg-gray-1 py-7 px-1">
+            <InputGroupInput
+              placeholder="Write a message"
+              className="bg-gray-1 "
+            />
+            <InputGroupAddon align={"inline-end"}>
+              <Button className="bg-blue-400 text-gray-12 hover:bg-blue-500">
+                <Send />
+              </Button>
+            </InputGroupAddon>
+          </InputGroup>
+        </div>
       </div>
-      <div className="bg-gray-5 w-100">Sidebar for settings, chat etc.</div>
     </div>
   );
 };
@@ -268,9 +361,64 @@ const Room = () => {
 export default Room;
 
 type UserCardProps = {
-  participant: IUser
-}
+  participant: IUser;
+};
 
 function UserCard({ ...props }: UserCardProps) {
-  return <div className="w-30 h-30 bg-gray-8">{props.participant.fullName}</div>;
+  const userInitials = useMemo(() => {
+    if (!props.participant) return "";
+    return props.participant.fullName
+      .split(" ")
+      .map((word: string) => word[0])
+      .join("");
+  }, [props]);
+  return (
+    <div className="relative w-30 h-30 bg-gray-8 rounded-xl flex items-center justify-center  font-semibold">
+      <div className="absolute bottom-2 left-2 bg-gray-6 p-2 rounded-xl">
+        <Mic className="w-5 h-5" />
+      </div>
+      <div className="text-2xl">{userInitials}</div>
+    </div>
+  );
+}
+
+function Messages() {
+  return (
+    <ScrollToBottom
+      scrollViewClassName="flex flex-col gap-2 no-scrollbar"
+      className="min-h-0 overflow-y-auto"
+    >
+      <MessageSingle />
+      <MessageSingle />
+      <MessageSingle owner />
+      <MessageSingle owner />
+      <MessageSingle />
+      <MessageSingle />
+      <MessageSingle />
+      <MessageSingle />
+      <MessageSingle />
+      <MessageSingle />
+      <MessageSingle />
+      <MessageSingle />
+      <MessageSingle />
+    </ScrollToBottom>
+  );
+}
+
+type MessageSingleProps = {
+  owner?: boolean;
+};
+
+function MessageSingle({ owner = false }: MessageSingleProps) {
+  return (
+    <div
+      className={cn(
+        "p-3 rounded-xl w-max",
+        owner ? "bg-gray-4 ml-auto text-right" : "bg-gray-1"
+      )}
+    >
+      <h3 className="font-semibold">Rendra</h3>
+      <p>I think this is some message</p>
+    </div>
+  );
 }
