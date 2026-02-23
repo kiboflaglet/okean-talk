@@ -194,7 +194,7 @@ const Home = () => {
                   <Avatar className="size-9">
                     <AvatarImage
                       alt={user?.userData?.fullName}
-                      src={user.userData?.avatar_url}
+                      src={user?.userData?.avatar_url}
                     />
                     <AvatarFallback>{userInitials}</AvatarFallback>
                   </Avatar>
@@ -206,7 +206,7 @@ const Home = () => {
                         <Avatar className="size-16">
                           <AvatarImage
                             alt={user?.userData?.fullName}
-                            src={user.userData?.avatar_url}
+                            src={user?.userData?.avatar_url}
                           />
                           <AvatarFallback>{userInitials}</AvatarFallback>
                         </Avatar>

@@ -1,11 +1,17 @@
 import type { IRoom, IUser } from "@/src/interfaces";
 import {
+  ArrowLeft,
   ArrowRight,
   Copy,
   Ellipsis,
   Loader,
+  Menu,
+  MessageSquare,
+  MessageSquareCode,
+  MessageSquareText,
   Mic,
   MicOff,
+  Phone,
   SettingsIcon,
   VideoOff,
 } from "lucide-react";
@@ -31,15 +37,32 @@ import {
   type roomParticipantCreate,
 } from "../../home/roomSchema";
 import Chat from "./Chat";
+import { useBreakpoint } from "../../../hooks/useBreakpoint";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "../../../components/ui/drawer";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "../../../components/ui/sheet";
 
 const RoomPage = () => {
+  const { isMobile } = useBreakpoint();
   const roomLoader: RoomLoader = useLoaderData();
-  const [roomId] = useState<string | null>(roomLoader.roomData?.id || null);
-  const [roomData, setRoomData] = useState(roomLoader.roomData);
+  const [roomId] = useState<string | null>(roomLoader?.roomData?.id || null);
+  const [roomData, setRoomData] = useState(roomLoader?.roomData);
   const [error, setError] = useState<string | null>(null);
   const [userJoined, setUserJoined] = useState(false);
   const [userJoinLoading, setUserJoinLoading] = useState(false);
   const [userLeaveLoading, setUserLeaveLoading] = useTransition();
+  const [openMobileChatSheet, setOpenMobileChatSheet] = useState(false);
   const userInitials = useMemo(() => {
     if (!roomLoader?.userData) return "";
     return roomLoader.userData?.fullName
@@ -184,13 +207,19 @@ const RoomPage = () => {
   }, [roomId]);
 
   useEffect(() => {
+    if (!userJoined) return;
+
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
+      e.returnValue = ""; // required for some browsers
     };
 
     window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, []);
+
+    return () => {
+      window.removeEventListener("beforeunload", handler);
+    };
+  }, [userJoined]);
 
   if (!userJoined) {
     return (
@@ -213,9 +242,194 @@ const RoomPage = () => {
               Joining <Loader className="animate-spin" />
             </>
           ) : (
-            <>Join the room <ArrowRight /></>
+            <>
+              Join the room <ArrowRight />
+            </>
           )}
         </Button>
+      </div>
+    );
+  }
+
+  const count = roomData?.users?.length || 0;
+
+  if (isMobile) {
+    return (
+      <div className=" relative p-2 pt-4 flex flex-col  gap-2 justify-between min-h-screen max-h-screen h-screen ">
+        <div className="shrink-0 flex justify-between items-center">
+          <Drawer>
+            <DrawerTrigger>
+              <Button variant={"ghost"}>
+                <Menu />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>Settings</DrawerTitle>
+              </DrawerHeader>
+              <div className="px-4 pb-4"></div>
+            </DrawerContent>
+          </Drawer>
+
+          <div className="text-center">
+            <p>{roomLoader.roomData?.topic.slice(0, 30)}...</p>
+          </div>
+
+          <div className="flex gap-2">
+            <Drawer>
+              <DrawerTrigger>
+                <Avatar className="size-9">
+                  <AvatarImage
+                    alt={roomLoader?.userData?.fullName}
+                    src={roomLoader?.userData?.avatar_url}
+                  />
+                  <AvatarFallback>{userInitials}</AvatarFallback>
+                </Avatar>
+              </DrawerTrigger>
+              <DrawerContent className="">
+                <DrawerHeader>
+                  <DrawerTitle className="flex justify-center">
+                    <div className="flex flex-col gap-2 items-center">
+                      <Avatar className="size-16">
+                        <AvatarImage
+                          alt={roomLoader?.userData?.fullName}
+                          src={roomLoader?.userData?.avatar_url}
+                        />
+                        <AvatarFallback>{userInitials}</AvatarFallback>
+                      </Avatar>
+                      <span>{roomLoader?.userData?.fullName}</span>
+                    </div>
+                  </DrawerTitle>
+                </DrawerHeader>
+              </DrawerContent>
+            </Drawer>
+          </div>
+        </div>
+        <div className="h-full overflow-y-auto">
+          <div className="grid grid-cols-2 gap-4 w-full h-full p-4">
+            {roomData?.users?.map((item, i) => {
+              return (
+                <div
+                  key={item.participant.id}
+                  className={`
+            bg-blue-500 rounded-xl flex justify-center items-center
+            ${count === 1 ? "col-span-2 place-self-center w-1/2 h-1/2" : ""}
+            ${
+              count % 2 === 1 && i === count - 1
+                ? "col-span-2 justify-self-center w-1/2"
+                : ""
+            }
+            h-40
+          `}
+                >
+                  <UserCard {...item} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className=" flex justify-center mb-15 gap-2">
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button
+                disabled={userLeaveLoading}
+                variant={"destructive"}
+              >
+                {userLeaveLoading ? (
+                  <Loader className="animate-spin" />
+                ) : (
+                  <Phone />
+                )}
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>Are you sure?</DrawerTitle>
+              </DrawerHeader>
+
+              <DrawerFooter>
+                <Button
+                  onClick={() => {
+                    leaveRoom(roomId);
+                  }}
+                  disabled={userLeaveLoading}
+                  variant={"destructive"}
+                >
+                  {userLeaveLoading ? (
+                    <span className="flex gap-1"><Loader className="animate-spin" /> Leaving</span>
+                  ) : (
+                    "Leave"
+                  )}
+                </Button>
+                <DrawerClose asChild>
+                  <Button variant="outline">Cancel </Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+
+          <Sheet
+            onOpenChange={setOpenMobileChatSheet}
+            open={openMobileChatSheet}
+          >
+            <SheetTrigger asChild>
+              <Button className="relative ">
+                <MessageSquareText />
+                {/* <div className="absolute top-1.5 right-1.5   w-2 h-2 bg-red-400 rounded-full"></div> */}
+              </Button>
+            </SheetTrigger>
+            <SheetContent showCloseButton={false} className="min-w-screen ">
+              <div className="p-2 pt-4 flex flex-col  gap-2 justify-between min-h-screen h-screen ">
+                <div className="shrink-0 flex justify-between items-center">
+                  <Button
+                    onClick={() => {
+                      setOpenMobileChatSheet((prev) => !prev);
+                    }}
+                    className="size-9"
+                  >
+                    <ArrowLeft />
+                  </Button>
+                  <div className="text-center">
+                    <p>{roomData?.users?.length} people </p>
+                  </div>
+
+                  <Drawer>
+                    <DrawerTrigger>
+                      <Avatar className="size-9">
+                        <AvatarImage
+                          alt={roomLoader?.userData?.fullName}
+                          src={roomLoader?.userData?.avatar_url}
+                        />
+                        <AvatarFallback>{userInitials}</AvatarFallback>
+                      </Avatar>
+                    </DrawerTrigger>
+                    <DrawerContent className="">
+                      <DrawerHeader>
+                        <DrawerTitle className="flex justify-center">
+                          <div className="flex flex-col gap-2 items-center">
+                            <Avatar className="size-16">
+                              <AvatarImage
+                                alt={roomLoader?.userData?.fullName}
+                                src={roomLoader?.userData?.avatar_url}
+                              />
+                              <AvatarFallback>{userInitials}</AvatarFallback>
+                            </Avatar>
+                            <span>{roomLoader?.userData?.fullName}</span>
+                          </div>
+                        </DrawerTitle>
+                      </DrawerHeader>
+                    </DrawerContent>
+                  </Drawer>
+                </div>
+                <Chat
+                  user={roomLoader.userData}
+                  roomId={roomId || ""}
+                  userId={roomLoader.userData?.id || ""}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     );
   }
@@ -224,9 +438,9 @@ const RoomPage = () => {
     <div className=" bg-gray-1 h-screen flex flex-col">
       <div className=" border-b border-gray-7 p-4 h-20 flex justify-between items-center">
         <div className="flex flex-col gap-2">
-          <h1 className="text-lg">{roomLoader.roomData?.topic}</h1>
+          <h1 className="text-lg">{roomData?.topic}</h1>
           <div className="flex gap-2 items-center">
-            {roomLoader.roomData?.languages.map((item, index) => (
+            {roomData?.languages.map((item, index) => (
               <span
                 key={"lang-" + index}
                 className="bg-gray-7 rounded-lg px-2 py-1 "
@@ -347,11 +561,11 @@ function UserCard({ ...props }: UserCardProps) {
       .join("");
   }, [props]);
   return (
-    <div className="relative w-30 h-30 bg-gray-8 rounded-xl flex items-center justify-center  font-semibold">
-      <div className="absolute bottom-2 left-2 bg-gray-6 p-2 rounded-xl">
+    <div className="relative w-full h-full rounded-xl flex items-center justify-center  font-semibold">
+      {/* <div className="absolute bottom-2 left-2  p-2 rounded-xl">
         <Mic className="w-5 h-5" />
-      </div>
-      <div className="text-2xl">{userInitials}</div>
+      </div> */}
+      <div className="text-3xl">{userInitials}</div>
     </div>
   );
 }

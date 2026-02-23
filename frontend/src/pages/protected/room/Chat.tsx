@@ -1,11 +1,6 @@
 import EmojiPicker from "emoji-picker-react";
 import { Ban, Ellipsis, Send, Trash } from "lucide-react";
-import {
-  useEffect,
-  useRef,
-  useState,
-  useTransition
-} from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import ScrollToBottom, { useScrollToBottom } from "react-scroll-to-bottom";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "../../../components/ui/button";
@@ -15,6 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
+import Select from "react-select";
+
 import {
   InputGroup,
   InputGroupAddon,
@@ -25,6 +22,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import { cn } from "../../../lib/utils";
 import { MessageStatuses } from "../../../types";
 import { messageCreateSchema, type TmessageCreate } from "./schema";
+import { useBreakpoint } from "../../../hooks/useBreakpoint";
 
 type ChatProps = {
   roomId: string;
@@ -33,6 +31,7 @@ type ChatProps = {
 };
 
 const Chat = ({ ...props }: ChatProps) => {
+  const { isMobile, isDesktop } = useBreakpoint();
   const [messages, setMessages] = useState<IMessage[]>([]);
 
   const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
@@ -186,7 +185,12 @@ const Chat = ({ ...props }: ChatProps) => {
   }, []);
 
   return (
-    <div className="relative bg-gray-5 w-1/3 px-4 py-2 pt-2 rounded-xl shrink-0 flex flex-col justify-between min-h-0 overflow-hidden">
+    <div
+      className={cn(
+        "relative bg-gray-5 w-1/3 px-4 pb-2 pt-2 rounded-xl shrink-0 flex flex-col justify-between min-h-0 overflow-hidden",
+        isMobile && "w-full pt-2 h-full flex-1 bg-gray-1 px-1"
+      )}
+    >
       <ScrollToBottom
         followButtonClassName="scroll-follow-button"
         initialScrollBehavior="auto"
@@ -197,8 +201,15 @@ const Chat = ({ ...props }: ChatProps) => {
         {messagesLoading && (
           <div className="text-center text-xs">Loading messages...</div>
         )}
+        {messages.length <= 0 && (
+          <div className="text-center text-xs text-gray-10">
+            No messages found
+          </div>
+        )}
+
         {messages.map((item) => (
           <MessageSingle
+            key={item.id}
             message={item}
             owner={item.userId === props.userId}
             deleteMessage={deleteYourMessageForEveryone}
@@ -211,6 +222,7 @@ const Chat = ({ ...props }: ChatProps) => {
         <div className="absolute bottom-18 w-full">
           <EmojiPicker open={openEmojiPicker} onEmojiClick={handleEmojiClick} />
         </div>
+
         <InputGroup className="mt-2 bg-gray-1 py-7 px-1">
           <InputGroupInput
             ref={messageInputBoxRef}
@@ -220,16 +232,19 @@ const Chat = ({ ...props }: ChatProps) => {
             className="bg-gray-1 "
           />
           <InputGroupAddon align={"inline-end"}>
-            <Button
-              type="button"
-              variant={"ghost"}
-              onClick={() => {
-                setOpenEmojiPicker((prev) => !prev);
-              }}
-              className=" text-gray-12  text-xl hover:bg-blue-500"
-            >
-              😄
-            </Button>
+            {isDesktop && (
+              <Button
+                type="button"
+                variant={"ghost"}
+                onClick={() => {
+                  setOpenEmojiPicker((prev) => !prev);
+                }}
+                className=" text-gray-12  text-xl hover:bg-blue-500"
+              >
+                😄
+              </Button>
+            )}
+
             <Button
               variant={"ghost"}
               onClick={(e) => {

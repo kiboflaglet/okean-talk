@@ -56,7 +56,7 @@ export function RoomCreate() {
     defaultValues: {
       topic: "",
       languages: ["en"],
-      maxParticipants: 10,
+      maxParticipants: 5,
     },
     resolver: zodResolver(roomSchema),
   });
@@ -126,6 +126,8 @@ export function RoomCreate() {
                         <div className="h-full w-2  bg-gray-1"></div>
                       </ButtonGroupSeparator>
                       <Button
+                        type="button"
+
                         className="h-8.5 group bg-gray-6 text-gray-12 hover:bg-gray-8"
                         onClick={(e) => {
                           e.preventDefault();
@@ -250,6 +252,7 @@ export function RoomCreate() {
                         <div className="h-full w-2  bg-gray-1"></div>
                       </ButtonGroupSeparator>
                       <Button
+                        type="button"
                         className="h-8.5 group bg-gray-6 text-gray-12 hover:bg-gray-8"
                         onClick={(e) => {
                           e.preventDefault();
@@ -317,10 +320,10 @@ export function RoomCreate() {
                         }
                         onChange={(option) => field.onChange(option?.value)}
                         isClearable
-                           menuPlacement="bottom"
-                      menuPosition="absolute"
-                      classNamePrefix={"react-select"}
-                      className="select-style"
+                        menuPlacement="bottom"
+                        menuPosition="absolute"
+                        classNamePrefix={"react-select"}
+                        className="select-style"
                       />
                     </Field>
                   )}

@@ -223,3 +223,8 @@
   background-size: contain;
   background-repeat: no-repeat;
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;  
+}

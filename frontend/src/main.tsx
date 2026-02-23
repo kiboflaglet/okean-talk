@@ -70,7 +70,7 @@ async function homeLoader() {
   }
 
   const data: HomeLoader = {
-    userData,
+    userData: userData || null
   };
 
   return data;
