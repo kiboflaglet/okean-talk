@@ -12,6 +12,7 @@ import { supabase } from "./lib/supabaseClient.ts";
 import RoomPage from "./pages/protected/room/RoomPage.tsx";
 import { RoomsProvider } from "./provider/roomsContext.tsx";
 import type { HomeLoader, RoomLoader } from "./types.ts";
+import PrivacyAndTerms from "./pages/privacy-and-terms/PrivacyAndTerms.tsx";
 
 async function roomLoader({ params }: LoaderFunctionArgs) {
   const { id: roomId } = params;
@@ -70,7 +71,7 @@ async function homeLoader() {
   }
 
   const data: HomeLoader = {
-    userData: userData || null
+    userData: userData || null,
   };
 
   return data;
@@ -86,6 +87,10 @@ const router = createBrowserRouter([
     path: "/room/:id",
     element: <RoomPage />,
     loader: roomLoader,
+  },
+  {
+    path: "/privacy-and-terms",
+    element: <PrivacyAndTerms />,
   },
 ]);
 

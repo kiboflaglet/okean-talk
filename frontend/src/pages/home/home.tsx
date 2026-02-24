@@ -166,16 +166,67 @@ const Home = () => {
         </aside>
       )}
 
-      <main className="flex flex-1 flex-col overflow-y-auto px-8 ">
+      <main className="flex flex-1 flex-col overflow-y-auto px-8  ">
         <header
           className={cn(
-            "flex  items-center gap-4 mt-6",
+            "flex  items-center gap-4 mt-6 justify-between",
             isMobile && "justify-between"
           )}
         >
-          <h1 className="text-2xl font-bold">Okean Talk</h1>
-          {isMobile ? (
-            <div className="flex gap-2 items-center">
+          <div className="flex gap-2">
+            <h1 className="text-2xl font-bold">Okean Talk</h1>
+            {isMobile ? (
+              <div className="flex gap-2 items-center">
+                <RoomCreate
+                  canCreate={
+                    !!rooms.find(
+                      (item) => item.ownerId === homeLoader?.userData?.id
+                    )
+                      ? false
+                      : true
+                  }
+                />
+                {homeLoader?.userData ? (
+                  <Drawer>
+                    <DrawerTrigger>
+                      <Avatar className="size-9">
+                        <AvatarImage
+                          alt={homeLoader?.userData?.fullName}
+                          src={homeLoader?.userData?.avatar_url}
+                        />
+                        <AvatarFallback>{userInitials}</AvatarFallback>
+                      </Avatar>
+                    </DrawerTrigger>
+                    <DrawerContent className="">
+                      <DrawerHeader>
+                        <DrawerTitle className="flex justify-center">
+                          <div className="flex flex-col gap-2 items-center">
+                            <Avatar className="size-16">
+                              <AvatarImage
+                                alt={homeLoader?.userData?.fullName}
+                                src={homeLoader?.userData?.avatar_url}
+                              />
+                              <AvatarFallback>{userInitials}</AvatarFallback>
+                            </Avatar>
+                            <span>{homeLoader?.userData?.fullName}</span>
+                          </div>
+                        </DrawerTitle>
+                      </DrawerHeader>
+                      <Separator />
+
+                      <div className="mb-6 flex flex-col gap-2 [&>div]:mx-15 [&>div]:p-2 [&>div]:flex [&>div]:justify-between [&>div]:items-center [&>div]:border [&>div]:border-gray-5 [&>div]:rounded-lg">
+                        <div className=" text-red-400">
+                          <span>Log out</span>
+                          <LogOut className="w-5 h-5" />
+                        </div>
+                      </div>
+                    </DrawerContent>
+                  </Drawer>
+                ) : (
+                  <SignInButton />
+                )}
+              </div>
+            ) : (
               <RoomCreate
                 canCreate={
                   !!rooms.find(
@@ -185,57 +236,17 @@ const Home = () => {
                     : true
                 }
               />
-              {homeLoader?.userData ? (
-                <Drawer>
-                  <DrawerTrigger>
-                    <Avatar className="size-9">
-                      <AvatarImage
-                        alt={homeLoader?.userData?.fullName}
-                        src={homeLoader?.userData?.avatar_url}
-                      />
-                      <AvatarFallback>{userInitials}</AvatarFallback>
-                    </Avatar>
-                  </DrawerTrigger>
-                  <DrawerContent className="">
-                    <DrawerHeader>
-                      <DrawerTitle className="flex justify-center">
-                        <div className="flex flex-col gap-2 items-center">
-                          <Avatar className="size-16">
-                            <AvatarImage
-                              alt={homeLoader?.userData?.fullName}
-                              src={homeLoader?.userData?.avatar_url}
-                            />
-                            <AvatarFallback>{userInitials}</AvatarFallback>
-                          </Avatar>
-                          <span>{homeLoader?.userData?.fullName}</span>
-                        </div>
-                      </DrawerTitle>
-                    </DrawerHeader>
-                    <Separator />
+            )}
+          </div>
 
-                    <div className="mb-6 flex flex-col gap-2 [&>div]:mx-15 [&>div]:p-2 [&>div]:flex [&>div]:justify-between [&>div]:items-center [&>div]:border [&>div]:border-gray-5 [&>div]:rounded-lg">
-                      <div className=" text-red-400">
-                        <span>Log out</span>
-                        <LogOut className="w-5 h-5" />
-                      </div>
-                    </div>
-                  </DrawerContent>
-                </Drawer>
-              ) : (
-                <SignInButton />
-              )}
-            </div>
-          ) : (
-            <RoomCreate
-              canCreate={
-                !!rooms.find(
-                  (item) => item.ownerId === homeLoader?.userData?.id
-                )
-                  ? false
-                  : true
-              }
-            />
-          )}
+          <div className="flex flex-col gap-1 [&>a]:text-gray-11">
+            <a
+              className="h-3 p-0 m-0 border-none"
+              href={window.origin + "/privacy-and-terms"}
+            >
+              Privacy Policy and Terms
+            </a>
+          </div>
         </header>
 
         <div
