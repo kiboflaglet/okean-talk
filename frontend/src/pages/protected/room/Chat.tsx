@@ -10,19 +10,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
-import Select from "react-select";
 
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "../../../components/ui/input-group";
+import { useBreakpoint } from "../../../hooks/useBreakpoint";
 import type { IMessage, IUser } from "../../../interfaces";
 import { supabase } from "../../../lib/supabaseClient";
 import { cn } from "../../../lib/utils";
 import { MessageStatuses } from "../../../types";
 import { messageCreateSchema, type TmessageCreate } from "./schema";
-import { useBreakpoint } from "../../../hooks/useBreakpoint";
 
 type ChatProps = {
   roomId: string;

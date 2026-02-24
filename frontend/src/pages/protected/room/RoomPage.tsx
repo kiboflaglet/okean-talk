@@ -6,14 +6,11 @@ import {
   Ellipsis,
   Loader,
   Menu,
-  MessageSquare,
-  MessageSquareCode,
   MessageSquareText,
-  Mic,
   MicOff,
   Phone,
   SettingsIcon,
-  VideoOff,
+  VideoOff
 } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useLoaderData } from "react-router";
@@ -24,21 +21,6 @@ import {
 } from "../../../components/ui/avatar";
 import { Button } from "../../../components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu";
-import { supabase } from "../../../lib/supabaseClient";
-import { Languages, type RoomLoader } from "../../../types";
-import {
-  roomParticipantCreateSchema,
-  type roomParticipantCreate,
-} from "../../home/roomSchema";
-import Chat from "./Chat";
-import { useBreakpoint } from "../../../hooks/useBreakpoint";
-import {
   Drawer,
   DrawerClose,
   DrawerContent,
@@ -48,10 +30,25 @@ import {
   DrawerTrigger,
 } from "../../../components/ui/drawer";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../../components/ui/dropdown-menu";
+import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "../../../components/ui/sheet";
+import { useBreakpoint } from "../../../hooks/useBreakpoint";
+import { supabase } from "../../../lib/supabaseClient";
+import { Languages, type RoomLoader } from "../../../types";
+import {
+  roomParticipantCreateSchema,
+  type roomParticipantCreate,
+} from "../../home/roomSchema";
+import Chat from "./Chat";
 
 const RoomPage = () => {
   const { isMobile } = useBreakpoint();

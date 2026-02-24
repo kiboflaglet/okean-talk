@@ -1,16 +1,10 @@
 import {
-  Filter,
-  FilterX,
   HomeIcon,
   Languages as LangIcon,
   ListFilter,
   LogOut,
   LogOutIcon,
-  Search,
-  Settings,
-  SettingsIcon,
-  UserIcon,
-  Users,
+  Search
 } from "lucide-react";
 import Select, { type MultiValue } from "react-select";
 import {
@@ -22,29 +16,7 @@ import {
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useLoaderData } from "react-router";
 import { Languages, type HomeLoader, type TLanguage } from "../../../src/types";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "../../components/ui/input-group";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
-import { supabase } from "../../lib/supabaseClient";
-import { useRoomsContext } from "../../provider/roomsContext";
-import { RoomCreate } from "./room-create";
-import Rooms from "./rooms";
-import SignInButton from "./sign-in-button";
-import { useBreakpoint } from "../../hooks/useBreakpoint";
+import { Button } from "../../components/ui/button";
 import {
   Drawer,
   DrawerClose,
@@ -54,9 +26,30 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../../components/ui/drawer";
-import { cn } from "../../lib/utils";
-import { Button } from "../../components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "../../components/ui/dropdown-menu";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "../../components/ui/input-group";
 import { Separator } from "../../components/ui/seperator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
+import { useBreakpoint } from "../../hooks/useBreakpoint";
+import { supabase } from "../../lib/supabaseClient";
+import { cn } from "../../lib/utils";
+import { useRoomsContext } from "../../provider/roomsContext";
+import { RoomCreate } from "./room-create";
+import Rooms from "./rooms";
+import SignInButton from "./sign-in-button";
 
 const Home = () => {
   const user: HomeLoader = useLoaderData();
