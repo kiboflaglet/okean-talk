@@ -44,7 +44,11 @@ import { Languages, type HomeLoader } from "../../types";
 import { roomSchema, type RoomFormValues } from "./roomSchema";
 import SignInButton from "./sign-in-button";
 
-export function RoomCreate() {
+type RoomCreateProps = {
+  canCreate: boolean;
+};
+
+export function RoomCreate({ canCreate }: RoomCreateProps) {
   const { addRoom } = useRoomsContext();
   const { isMobile } = useBreakpoint();
   const loaderData: HomeLoader = useLoaderData();
@@ -72,6 +76,7 @@ export function RoomCreate() {
   };
 
   const onSubmit = (data: RoomFormValues) => {
+    if (!canCreate) return;
     if (!loaderData?.userData) return;
 
     setLoadingForm(() => {
@@ -94,7 +99,7 @@ export function RoomCreate() {
     return (
       <Drawer onOpenChange={setRoomCreateFormOpen} open={roomCreateFormOpen}>
         <DrawerTrigger asChild>
-          <Button>
+          <Button disabled={!canCreate}>
             <Plus className="w-8 h-8" />
           </Button>
         </DrawerTrigger>
@@ -234,7 +239,7 @@ export function RoomCreate() {
   return (
     <Dialog onOpenChange={setRoomCreateFormOpen} open={roomCreateFormOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={!canCreate}>
           <Plus className="w-8 h-8" /> {!isMobile && "Create room"}
         </Button>
       </DialogTrigger>

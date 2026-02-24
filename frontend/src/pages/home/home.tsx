@@ -4,7 +4,7 @@ import {
   ListFilter,
   LogOut,
   LogOutIcon,
-  Search
+  Search,
 } from "lucide-react";
 import Select, { type MultiValue } from "react-select";
 import {
@@ -30,7 +30,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import {
   InputGroup,
@@ -52,10 +52,10 @@ import Rooms from "./rooms";
 import SignInButton from "./sign-in-button";
 
 const Home = () => {
-  const user: HomeLoader = useLoaderData();
+  const homeLoader: HomeLoader = useLoaderData();
   const [signOutLoading, setSignOutLoading] = useTransition();
   const [selectedLanguages, setSelectedLanguages] = useState<TLanguage[]>([]);
-  const { setFilters } = useRoomsContext();
+  const { setFilters, rooms } = useRoomsContext();
   const { isMobile } = useBreakpoint();
   const [openMobileFilters, setOpenMobileFilters] = useState(false);
   useEffect(() => {
@@ -63,12 +63,12 @@ const Home = () => {
   }, [selectedLanguages]);
 
   const userInitials = useMemo(() => {
-    if (!user?.userData) return "";
-    return user.userData?.fullName
+    if (!homeLoader?.userData) return "";
+    return homeLoader.userData?.fullName
       .split(" ")
       .map((word: string) => word[0])
       .join("");
-  }, [user]);
+  }, [homeLoader]);
 
   const logOut = () => {
     setSignOutLoading(async () => {
@@ -127,19 +127,18 @@ const Home = () => {
             <div className="h-6 w-6 rounded  flex justify-center items-center">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  {user?.userData ? (
+                  {homeLoader?.userData ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Avatar className="size-9">
                           <AvatarImage
-                            alt={user?.userData?.fullName}
-                            src={user.userData?.avatar_url}
+                            alt={homeLoader?.userData?.fullName}
+                            src={homeLoader.userData?.avatar_url}
                           />
                           <AvatarFallback>{userInitials}</AvatarFallback>
                         </Avatar>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="z-40" side="left">
-                       
                         <DropdownMenuItem
                           disabled={signOutLoading}
                           onClick={logOut}
@@ -177,49 +176,65 @@ const Home = () => {
           <h1 className="text-2xl font-bold">Okean Talk</h1>
           {isMobile ? (
             <div className="flex gap-2 items-center">
-              <RoomCreate />
-                  {user?.userData ? (
-              <Drawer>
-                <DrawerTrigger>
-                  <Avatar className="size-9">
-                    <AvatarImage
-                      alt={user?.userData?.fullName}
-                      src={user?.userData?.avatar_url}
-                    />
-                    <AvatarFallback>{userInitials}</AvatarFallback>
-                  </Avatar>
-                </DrawerTrigger>
-                <DrawerContent className="">
-                  <DrawerHeader>
-                    <DrawerTitle className="flex justify-center">
-                      <div className="flex flex-col gap-2 items-center">
-                        <Avatar className="size-16">
-                          <AvatarImage
-                            alt={user?.userData?.fullName}
-                            src={user?.userData?.avatar_url}
-                          />
-                          <AvatarFallback>{userInitials}</AvatarFallback>
-                        </Avatar>
-                        <span>{user?.userData?.fullName}</span>
-                      </div>
-                    </DrawerTitle>
-                  </DrawerHeader>
-                  <Separator />
+              <RoomCreate
+                canCreate={
+                  !!rooms.find(
+                    (item) => item.ownerId === homeLoader?.userData?.id
+                  )
+                    ? false
+                    : true
+                }
+              />
+              {homeLoader?.userData ? (
+                <Drawer>
+                  <DrawerTrigger>
+                    <Avatar className="size-9">
+                      <AvatarImage
+                        alt={homeLoader?.userData?.fullName}
+                        src={homeLoader?.userData?.avatar_url}
+                      />
+                      <AvatarFallback>{userInitials}</AvatarFallback>
+                    </Avatar>
+                  </DrawerTrigger>
+                  <DrawerContent className="">
+                    <DrawerHeader>
+                      <DrawerTitle className="flex justify-center">
+                        <div className="flex flex-col gap-2 items-center">
+                          <Avatar className="size-16">
+                            <AvatarImage
+                              alt={homeLoader?.userData?.fullName}
+                              src={homeLoader?.userData?.avatar_url}
+                            />
+                            <AvatarFallback>{userInitials}</AvatarFallback>
+                          </Avatar>
+                          <span>{homeLoader?.userData?.fullName}</span>
+                        </div>
+                      </DrawerTitle>
+                    </DrawerHeader>
+                    <Separator />
 
-                  <div className="mb-6 flex flex-col gap-2 [&>div]:mx-15 [&>div]:p-2 [&>div]:flex [&>div]:justify-between [&>div]:items-center [&>div]:border [&>div]:border-gray-5 [&>div]:rounded-lg">
-                  
-                    <div className=" text-red-400">
-                      <span>Log out</span>
-                      <LogOut className="w-5 h-5" />
+                    <div className="mb-6 flex flex-col gap-2 [&>div]:mx-15 [&>div]:p-2 [&>div]:flex [&>div]:justify-between [&>div]:items-center [&>div]:border [&>div]:border-gray-5 [&>div]:rounded-lg">
+                      <div className=" text-red-400">
+                        <span>Log out</span>
+                        <LogOut className="w-5 h-5" />
+                      </div>
                     </div>
-                  </div>
-                </DrawerContent>
-              </Drawer>) : (
+                  </DrawerContent>
+                </Drawer>
+              ) : (
                 <SignInButton />
               )}
             </div>
           ) : (
-            <RoomCreate />
+            <RoomCreate
+              canCreate={
+                !!rooms.find(
+                  (item) => item.ownerId === homeLoader?.userData?.id
+                )
+                  ? false
+                  : true
+              }
+            />
           )}
         </header>
 
