@@ -99,7 +99,7 @@ const Home = () => {
             </Tooltip>
           </div>
 
-          <div className="flex flex-col gap-8">
+          {/* <div className="flex flex-col gap-8">
             <div className="h-6 w-6 rounded  flex justify-center items-center">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -114,10 +114,10 @@ const Home = () => {
                 </TooltipContent>
               </Tooltip>
             </div>
-          </div>
+          </div> */}
 
           <div className="mt-auto flex flex-col gap-6">
-            <div className="h-6 w-6 rounded  flex justify-center items-center">
+            {/* <div className="h-6 w-6 rounded  flex justify-center items-center">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Settings />
@@ -130,7 +130,7 @@ const Home = () => {
                   Settings
                 </TooltipContent>
               </Tooltip>
-            </div>
+            </div> */}
             <div className="h-6 w-6 rounded  flex justify-center items-center">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -146,11 +146,7 @@ const Home = () => {
                         </Avatar>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="z-40" side="left">
-                        <DropdownMenuItem>
-                          <SettingsIcon />
-                          Settings
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                       
                         <DropdownMenuItem
                           disabled={signOutLoading}
                           onClick={logOut}
@@ -189,6 +185,7 @@ const Home = () => {
           {isMobile ? (
             <div className="flex gap-2 items-center">
               <RoomCreate />
+                  {user?.userData ? (
               <Drawer>
                 <DrawerTrigger>
                   <Avatar className="size-9">
@@ -217,21 +214,16 @@ const Home = () => {
                   <Separator />
 
                   <div className="mb-6 flex flex-col gap-2 [&>div]:mx-15 [&>div]:p-2 [&>div]:flex [&>div]:justify-between [&>div]:items-center [&>div]:border [&>div]:border-gray-5 [&>div]:rounded-lg">
-                    <div className=" ">
-                      <span>Profile</span>
-                      <UserIcon className="w-5 h-5" />
-                    </div>
-                    <div className=" ">
-                      <span>Settings</span>
-                      <SettingsIcon className="w-5 h-5" />
-                    </div>
+                  
                     <div className=" text-red-400">
                       <span>Log out</span>
                       <LogOut className="w-5 h-5" />
                     </div>
                   </div>
                 </DrawerContent>
-              </Drawer>
+              </Drawer>) : (
+                <SignInButton />
+              )}
             </div>
           ) : (
             <RoomCreate />

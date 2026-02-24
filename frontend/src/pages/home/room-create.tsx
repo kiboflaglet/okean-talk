@@ -99,119 +99,133 @@ export function RoomCreate() {
           </Button>
         </DrawerTrigger>
         <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Create a new room</DrawerTitle>
-            <DrawerDescription>
-              You can change room settings later
-            </DrawerDescription>
-          </DrawerHeader>
-          <form onSubmit={form.handleSubmit(onSubmit, onError)}>
-            <FieldGroup className="px-4">
-              <Controller
-                control={form.control}
-                name="topic"
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel htmlFor={field.name}>
-                      Topic in your head
-                    </FieldLabel>
-                    <ButtonGroup className="items-center">
-                      <Input
-                        className="bg-gray-4 text-gray-12 outline-none border text-[14px]  "
-                        {...field}
-                        id={field.name}
-                        placeholder="Custom or random topic name"
-                      />
-                      <ButtonGroupSeparator>
-                        <div className="h-full w-2  bg-gray-1"></div>
-                      </ButtonGroupSeparator>
-                      <Button
-                        type="button"
+          {loaderData?.userData ? (
+            <>
+              <DrawerHeader>
+                <DrawerTitle>Create a new room</DrawerTitle>
+                <DrawerDescription>
+                  You can change room settings later
+                </DrawerDescription>
+              </DrawerHeader>
 
-                        className="h-8.5 group bg-gray-6 text-gray-12 hover:bg-gray-8"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          pickRandomTopic();
-                        }}
-                      >
-                        {loadingRandomTopic ? (
-                          <Loader className="animate-spin" />
-                        ) : (
-                          <Dice4 className="group-hover:animate-pulse " />
-                        )}{" "}
-                      </Button>
-                    </ButtonGroup>
-                  </Field>
-                )}
-              />
-              <Controller
-                name="languages"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel>Select language</FieldLabel>
-                    <Select
-                      value={Languages.filter((opt) =>
-                        field.value?.includes(opt.value)
-                      )}
-                      isMulti
-                      options={Languages}
-                      onChange={(selected) => {
-                        field.onChange(selected.map((opt) => opt.value));
-                      }}
-                      menuPlacement="top"
-                      menuPosition="absolute"
-                      classNamePrefix={"react-select"}
-                      className="select-style"
-                    />
-                    {fieldState.error && (
-                      <FieldError>Pick up a language</FieldError>
+              <form onSubmit={form.handleSubmit(onSubmit, onError)}>
+                <FieldGroup className="px-4">
+                  <Controller
+                    control={form.control}
+                    name="topic"
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel htmlFor={field.name}>
+                          Topic in your head
+                        </FieldLabel>
+                        <ButtonGroup className="items-center">
+                          <Input
+                            className="bg-gray-4 text-gray-12 outline-none border text-[14px]  "
+                            {...field}
+                            id={field.name}
+                            placeholder="Custom or random topic name"
+                          />
+                          <ButtonGroupSeparator>
+                            <div className="h-full w-2  bg-gray-1"></div>
+                          </ButtonGroupSeparator>
+                          <Button
+                            type="button"
+                            className="h-8.5 group bg-gray-6 text-gray-12 hover:bg-gray-8"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              pickRandomTopic();
+                            }}
+                          >
+                            {loadingRandomTopic ? (
+                              <Loader className="animate-spin" />
+                            ) : (
+                              <Dice4 className="group-hover:animate-pulse " />
+                            )}{" "}
+                          </Button>
+                        </ButtonGroup>
+                      </Field>
                     )}
-                  </Field>
-                )}
-              />
+                  />
+                  <Controller
+                    name="languages"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel>Select language</FieldLabel>
+                        <Select
+                          value={Languages.filter((opt) =>
+                            field.value?.includes(opt.value)
+                          )}
+                          isMulti
+                          options={Languages}
+                          onChange={(selected) => {
+                            field.onChange(selected.map((opt) => opt.value));
+                          }}
+                          menuPlacement="top"
+                          menuPosition="absolute"
+                          classNamePrefix={"react-select"}
+                          className="select-style"
+                        />
+                        {fieldState.error && (
+                          <FieldError>Pick up a language</FieldError>
+                        )}
+                      </Field>
+                    )}
+                  />
 
-              <Controller
-                name="maxParticipants"
-                control={form.control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel>Max participants</FieldLabel>
+                  <Controller
+                    name="maxParticipants"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel>Max participants</FieldLabel>
 
-                    <Select
-                      options={Array.from({ length: 20 }, (_, i) => {
-                        const n = (i + 1).toString();
-                        return { value: n, label: n };
-                      })}
-                      value={
-                        field.value
-                          ? {
-                              value: String(field.value),
-                              label: String(field.value),
-                            }
-                          : null
-                      }
-                      onChange={(option) => field.onChange(option?.value)}
-                      isClearable
-                      menuPlacement="top"
-                      menuPosition="absolute"
-                      classNamePrefix={"react-select"}
-                      className="select-style"
-                    />
-                  </Field>
-                )}
-              />
-            </FieldGroup>
+                        <Select
+                          options={Array.from({ length: 20 }, (_, i) => {
+                            const n = (i + 1).toString();
+                            return { value: n, label: n };
+                          })}
+                          value={
+                            field.value
+                              ? {
+                                  value: String(field.value),
+                                  label: String(field.value),
+                                }
+                              : null
+                          }
+                          onChange={(option) => field.onChange(option?.value)}
+                          isClearable
+                          menuPlacement="top"
+                          menuPosition="absolute"
+                          classNamePrefix={"react-select"}
+                          className="select-style"
+                        />
+                      </Field>
+                    )}
+                  />
+                </FieldGroup>
 
-            <DrawerFooter>
-              <Button type="submit" disabled={loadingForm}>
-                Create {loadingForm && <Loader className="animate-spin" />}
-              </Button>
-              <DrawerClose asChild>
-                <Button variant="outline">Cancel </Button>
-              </DrawerClose>
-            </DrawerFooter>
-          </form>
+                <DrawerFooter>
+                  <Button type="submit" disabled={loadingForm}>
+                    Create {loadingForm && <Loader className="animate-spin" />}
+                  </Button>
+                  <DrawerClose asChild>
+                    <Button variant="outline">Cancel </Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </form>
+            </>
+          ) : (
+            <>
+              <DrawerHeader>
+                <DrawerTitle>Sign in</DrawerTitle>
+                <DrawerDescription>
+                  You need to sign up to create a room
+                </DrawerDescription>
+              </DrawerHeader>
+              <SignInButton showTitle />
+            </>
+          )}
         </DrawerContent>
       </Drawer>
     );
