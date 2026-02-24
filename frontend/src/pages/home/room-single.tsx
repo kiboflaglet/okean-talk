@@ -1,12 +1,6 @@
 import {
   ChevronRight,
-  Copy,
-  CreditCardIcon,
-  Ellipsis,
-  LogOutIcon,
-  MicOff,
-  SettingsIcon,
-  UserIcon
+  Copy
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -16,13 +10,6 @@ import {
 } from "../../components/ui/avatar";
 import { Button } from "../../components/ui/button";
 import { ButtonGroup } from "../../components/ui/button-group";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -76,7 +63,7 @@ const RoomSingle = ({ joinRoom, ...props }: RoomSingleProps) => {
           >
             <Copy className={cn("relative z-10", copyPing && "animate-ping")} />
           </Button>
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 size={"lg"}
@@ -104,7 +91,7 @@ const RoomSingle = ({ joinRoom, ...props }: RoomSingleProps) => {
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
         </ButtonGroup>
       </div>
 
@@ -146,7 +133,7 @@ const RoomSingle = ({ joinRoom, ...props }: RoomSingleProps) => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <MicOff className="w-4 h-4 text-gray-9" />
+          {/* <MicOff className="w-4 h-4 text-gray-9" /> */}
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="inline-block">
