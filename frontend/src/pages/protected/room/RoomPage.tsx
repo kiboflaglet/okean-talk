@@ -57,19 +57,7 @@ import {
   type roomParticipantCreate,
 } from "../../home/roomSchema";
 import Chat from "./Chat";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// WebRTC types & constants
-// ─────────────────────────────────────────────────────────────────────────────
-
-type SignalMessage =
-  | { type: "offer"; senderId: string; payload: RTCSessionDescriptionInit }
-  | { type: "answer"; senderId: string; payload: RTCSessionDescriptionInit }
-  | { type: "ice"; senderId: string; payload: RTCIceCandidateInit }
-  | { type: "join"; senderId: string }
-  | { type: "leave"; senderId: string };
-
-type VoiceStatus = "idle" | "waiting" | "connecting" | "connected" | "error";
+import type { SignalMessage, VoiceStatus } from "./types";
 
 const MY_ID = Math.random().toString(36).slice(2, 10);
 
@@ -77,10 +65,6 @@ const ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
 ];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Main Component
-// ─────────────────────────────────────────────────────────────────────────────
 
 const RoomPage = () => {
   const { isMobile } = useBreakpoint();
@@ -93,25 +77,22 @@ const RoomPage = () => {
   const [userLeaveLoading, setUserLeaveLoading] = useTransition();
   const [openChatSheet, setOpenChatSheet] = useState(false);
 
-  // Mic preference chosen on the pre-join screen
   const [micEnabled, setMicEnabled] = useState(true);
   const [micPermissionGranted, setMicPermissionGranted] = useState<
     boolean | null
   >(null);
 
-  // ── WebRTC state ────────────────────────────────────────────────────────────
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
   const [isMuted, setIsMuted] = useState(false);
   // const [speakingPeerId, setSpeakingPeerId] = useState<string | null>(null); // future: visual indicator
 
-  const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
-  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
-  const voiceChannelRef = useRef<RealtimeChannel | null>(null);
-  const iceCandidateBufferRef = useRef<RTCIceCandidateInit[]>([]);
-  const remoteDescSetRef = useRef(false);
-  const isCallerRef = useRef(false);
-
+  const pcsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const remoteAudiosRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const voiceChannelRef = useRef<RealtimeChannel | null>(null); // unchanged, keep it
+  const iceBuffersRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
+  const remoteDescSetRef = useRef<Map<string, boolean>>(new Map());
+  const voiceStartedRef = useRef(false);
   const userInitials = useMemo(() => {
     if (!roomLoader?.userData) return "";
     return roomLoader.userData.fullName
@@ -119,10 +100,6 @@ const RoomPage = () => {
       .map((w: string) => w[0])
       .join("");
   }, []);
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Room DB logic (unchanged from original)
-  // ─────────────────────────────────────────────────────────────────────────
 
   const fetchRoom = async (): Promise<IRoom | undefined> => {
     if (!roomId) return;
@@ -154,8 +131,6 @@ const RoomPage = () => {
         return;
       }
 
-      // FIX: use the returned value directly — never read from roomData state
-      // here because setRoomData is async and the closure captures a stale snapshot.
       const currentData = await fetchRoom();
 
       const alreadyJoined = currentData?.users?.find(
@@ -170,7 +145,6 @@ const RoomPage = () => {
           .eq("roomid", roomId);
       }
 
-      // Re-fetch after the potential delete so the capacity check is accurate
       const fresh = await fetchRoom();
       if (!fresh) return;
       if ((fresh?.users?.length || 0) >= (fresh?.maxParticipants || 0)) {
@@ -187,8 +161,6 @@ const RoomPage = () => {
         return;
       }
 
-      // Final fetch so the UI shows the updated participant list immediately,
-      // without waiting for the realtime subscription to fire.
       await fetchRoom();
 
       setUserJoined(true);
@@ -250,9 +222,6 @@ const RoomPage = () => {
     return () => window.removeEventListener("beforeunload", handler);
   }, [userJoined]);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // WebRTC — start voice when user has joined the room
-  // ─────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (userJoined && micEnabled && roomId) {
@@ -263,65 +232,88 @@ const RoomPage = () => {
     }
   }, [userJoined]);
 
-  // Cleanup on unmount
-  useEffect(() => () => voiceCleanup(true), []);
+  const closePeer = useCallback((peerId: string) => {
+    pcsRef.current.get(peerId)?.close();
+    pcsRef.current.delete(peerId);
 
-  const voiceCleanup = useCallback((notify: boolean) => {
-    if (notify && voiceChannelRef.current) {
-      voiceChannelRef.current.send({
-        type: "broadcast",
-        event: "signal",
-        payload: { type: "leave", senderId: MY_ID } satisfies SignalMessage,
-      });
-    }
-    pcRef.current?.close();
-    localStreamRef.current?.getTracks().forEach((t) => t.stop());
-    voiceChannelRef.current?.unsubscribe();
-    if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
+    const audio = remoteAudiosRef.current.get(peerId);
+    if (audio) audio.srcObject = null;
+    remoteAudiosRef.current.delete(peerId);
 
-    pcRef.current = null;
-    localStreamRef.current = null;
-    voiceChannelRef.current = null;
-    remoteDescSetRef.current = false;
-    iceCandidateBufferRef.current = [];
-    isCallerRef.current = false;
-    setIsMuted(false);
-    setVoiceStatus("idle");
+    iceBuffersRef.current.delete(peerId);
+    remoteDescSetRef.current.delete(peerId);
   }, []);
 
-  function createPeerConnection(): RTCPeerConnection {
+  useEffect(() => () => voiceCleanup(true), []);
+
+  const voiceCleanup = useCallback(
+    (notify: boolean) => {
+      if (notify && voiceChannelRef.current) {
+        voiceChannelRef.current.send({
+          type: "broadcast",
+          event: "signal",
+          payload: { type: "leave", senderId: MY_ID } satisfies SignalMessage,
+        });
+      }
+      for (const peerId of [...pcsRef.current.keys()]) closePeer(peerId);
+      localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      if (voiceChannelRef.current)
+        supabase.removeChannel(voiceChannelRef.current);
+      localStreamRef.current = null;
+      voiceChannelRef.current = null;
+      voiceStartedRef.current = false; 
+      setIsMuted(false);
+      setVoiceStatus("idle");
+    },
+    [closePeer]
+  );
+  function createPeerConnection(peerId: string): RTCPeerConnection {
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
+    iceBuffersRef.current.set(peerId, []);
+    remoteDescSetRef.current.set(peerId, false);
+
     pc.onicecandidate = (e) => {
-      if (e.candidate)
+      if (e.candidate) {
         sendVoiceSignal({
           type: "ice",
           senderId: MY_ID,
+          targetId: peerId, 
           payload: e.candidate.toJSON(),
         });
+      }
     };
 
     pc.oniceconnectionstatechange = () => {
       if (pc.iceConnectionState === "failed") pc.restartIce();
-      if (pc.iceConnectionState === "disconnected") setVoiceStatus("waiting");
     };
 
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === "connected") setVoiceStatus("connected");
-      if (pc.connectionState === "failed") {
-        setVoiceStatus("error");
-        voiceCleanup(false);
+      if (pc.connectionState === "failed" || pc.connectionState === "closed") {
+        closePeer(peerId);
+        if (pcsRef.current.size === 0) setVoiceStatus("waiting");
       }
     };
 
     pc.ontrack = (e) => {
-      if (!remoteAudioRef.current) {
-        remoteAudioRef.current = new Audio();
-        remoteAudioRef.current.autoplay = true;
-      }
-      remoteAudioRef.current.srcObject = e.streams[0];
-    };
+      const stream = e.streams[0];
+      if (!stream) return;
 
+      if (localStreamRef.current && stream.id === localStreamRef.current.id)
+        return;
+
+      let audio = remoteAudiosRef.current.get(peerId);
+      if (!audio) {
+        audio = new Audio();
+        audio.autoplay = true;
+        remoteAudiosRef.current.set(peerId, audio);
+      }
+      if (audio.srcObject !== stream) {
+        audio.srcObject = stream;
+      }
+    };
+    pcsRef.current.set(peerId, pc);
     return pc;
   }
 
@@ -333,30 +325,33 @@ const RoomPage = () => {
     });
   }
 
-  async function drainIceCandidates(pc: RTCPeerConnection) {
-    remoteDescSetRef.current = true;
-    for (const c of iceCandidateBufferRef.current) {
+  async function drainIceCandidates(peerId: string, pc: RTCPeerConnection) {
+    remoteDescSetRef.current.set(peerId, true);
+    const buffer = iceBuffersRef.current.get(peerId) ?? [];
+    for (const candidate of buffer) {
       try {
-        await pc.addIceCandidate(c);
+        await pc.addIceCandidate(candidate);
       } catch (e) {
-        console.warn(e);
+        console.warn("ICE drain:", e);
       }
     }
-    iceCandidateBufferRef.current = [];
+    iceBuffersRef.current.set(peerId, []);
   }
 
-  async function handleVoiceSignal( raw: SignalMessage) {
+  async function handleVoiceSignal(raw: SignalMessage) {
     if (raw.senderId === MY_ID) return;
-    const pc = pcRef.current;
-
     if (raw.type === "join") {
-      if (!pc) return;
-      isCallerRef.current = true;
+      if (!localStreamRef.current) return;
+      const pc = createPeerConnection(raw.senderId);
+      localStreamRef.current
+        .getTracks()
+        .forEach((t) => pc.addTrack(t, localStreamRef.current!));
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       sendVoiceSignal({
         type: "offer",
         senderId: MY_ID,
+        targetId: raw.senderId,
         payload: offer,
       });
       setVoiceStatus("connecting");
@@ -364,29 +359,33 @@ const RoomPage = () => {
     }
 
     if (raw.type === "leave") {
-      setVoiceStatus("waiting");
-      pcRef.current?.close();
-      const fresh = createPeerConnection();
-      pcRef.current = fresh;
-      localStreamRef.current
-        ?.getTracks()
-        .forEach((t) => fresh.addTrack(t, localStreamRef.current!));
-      remoteDescSetRef.current = false;
-      iceCandidateBufferRef.current = [];
+      closePeer(raw.senderId);
+      if (pcsRef.current.size === 0) setVoiceStatus("waiting");
       return;
     }
 
-    if (!pc) return;
+    if (raw.targetId && raw.targetId !== MY_ID) return;
 
     if (raw.type === "offer") {
-      if (pc.signalingState !== "stable") return;
-      await pc.setRemoteDescription(raw.payload);
-      await drainIceCandidates(pc);
+      let pc = pcsRef.current.get(raw.senderId);
+      if (!pc) {
+        pc = createPeerConnection(raw.senderId);
+        localStreamRef.current
+          ?.getTracks()
+          .forEach((t) => pc!.addTrack(t, localStreamRef.current!));
+      }
+      if (pc.signalingState !== "stable") {
+        console.warn(`Offer in state "${pc.signalingState}" — ignoring`);
+        return;
+      }
+      await pc.setRemoteDescription(raw.payload as RTCSessionDescriptionInit);
+      await drainIceCandidates(raw.senderId, pc);
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       sendVoiceSignal({
         type: "answer",
         senderId: MY_ID,
+        targetId: raw.senderId,
         payload: answer,
       });
       setVoiceStatus("connecting");
@@ -394,34 +393,50 @@ const RoomPage = () => {
     }
 
     if (raw.type === "answer") {
-      if (pc.signalingState !== "have-local-offer") return;
-      await pc.setRemoteDescription(raw.payload);
-      await drainIceCandidates(pc);
+      const pc = pcsRef.current.get(raw.senderId);
+      if (!pc) return;
+      if (pc.signalingState !== "have-local-offer") {
+        console.warn(`Answer in state "${pc.signalingState}" — ignoring`);
+        return;
+      }
+      await pc.setRemoteDescription(raw.payload as RTCSessionDescriptionInit);
+      await drainIceCandidates(raw.senderId, pc);
       return;
     }
 
     if (raw.type === "ice") {
-      if (!remoteDescSetRef.current) {
-        iceCandidateBufferRef.current.push(raw.payload);
-      } else {
-        try {
-          await pc.addIceCandidate(raw.payload);
-        } catch (e) {
-          console.warn(e);
-        }
+      const candidate = raw.payload as RTCIceCandidateInit;
+      const pc = pcsRef.current.get(raw.senderId);
+
+      if (!pc || !remoteDescSetRef.current.get(raw.senderId)) {
+        const buf = iceBuffersRef.current.get(raw.senderId) ?? [];
+        buf.push(candidate);
+        iceBuffersRef.current.set(raw.senderId, buf);
+        return;
+      }
+
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (e) {
+        console.warn("addIceCandidate:", e);
       }
     }
   }
 
   async function startVoice(roomId: string) {
+    if (voiceStartedRef.current) return; 
+    voiceStartedRef.current = true; 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 480002
+        },
+      });
       localStreamRef.current = stream;
       setMicPermissionGranted(true);
-
-      const pc = createPeerConnection();
-      pcRef.current = pc;
-      stream.getTracks().forEach((t) => pc.addTrack(t, stream));
 
       const channel = supabase.channel(`voice:${roomId}`, {
         config: { broadcast: { ack: false, self: false } },
@@ -435,7 +450,7 @@ const RoomPage = () => {
             try {
               await handleVoiceSignal(payload);
             } catch (e) {
-              console.error(e);
+              console.error("Signal error:", e);
             }
           }
         )
@@ -447,7 +462,8 @@ const RoomPage = () => {
 
       voiceChannelRef.current = channel;
     } catch (e) {
-      console.warn("Mic access denied or unavailable", e);
+      voiceStartedRef.current = false; 
+      console.warn("Mic unavailable:", e);
       setMicPermissionGranted(false);
       setVoiceStatus("idle");
     }
@@ -460,13 +476,11 @@ const RoomPage = () => {
     setIsMuted((m) => !m);
   }
 
-  // ── Mic permission probe on pre-join toggle ──────────────────────────────
   async function handleMicToggle() {
     if (!micEnabled) {
-      // user wants to enable — probe permission early
       try {
         const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-        s.getTracks().forEach((t) => t.stop()); // we don't hold onto it yet
+        s.getTracks().forEach((t) => t.stop()); 
         setMicPermissionGranted(true);
         setMicEnabled(true);
       } catch {
@@ -478,10 +492,6 @@ const RoomPage = () => {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Voice status badge
-  // ─────────────────────────────────────────────────────────────────────────
-
   const voiceBadge = {
     idle: { label: "Voice off", color: "bg-gray-700 text-gray-400" },
     waiting: { label: "Waiting…", color: "bg-yellow-900/60 text-yellow-400" },
@@ -492,15 +502,10 @@ const RoomPage = () => {
 
   const count = roomData?.users?.length || 0;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // PRE-JOIN SCREEN
-  // ─────────────────────────────────────────────────────────────────────────
-
   if (!userJoined) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
         <div className="w-full max-w-sm flex flex-col items-center gap-6">
-          {/* Room topic */}
           <div className="text-center">
             <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
               You're about to join
@@ -510,7 +515,6 @@ const RoomPage = () => {
             </h1>
           </div>
 
-          {/* Avatar */}
           <div className="relative">
             <div className="w-24 h-24 rounded-full ring-2 ring-gray-700 overflow-hidden bg-gray-800 flex items-center justify-center">
               <Avatar className="size-24">
@@ -529,7 +533,6 @@ const RoomPage = () => {
             {roomLoader.userData?.fullName}
           </p>
 
-          {/* Mic toggle card */}
           <button
             type="button"
             onClick={handleMicToggle}
@@ -580,7 +583,6 @@ const RoomPage = () => {
 
           {error && <p className="text-xs text-red-400 text-center">{error}</p>}
 
-          {/* Join button */}
           <Button
             onClick={joinRoom}
             disabled={userJoinLoading}
@@ -605,17 +607,12 @@ const RoomPage = () => {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // MOBILE ROOM VIEW
-  // ─────────────────────────────────────────────────────────────────────────
 
   if (isMobile) {
     return (
       <div className="relative flex flex-col h-screen bg-gray-950 overflow-hidden">
-        {/* Top bar */}
         <div className="shrink-0 flex items-center justify-between px-4 pt-5 pb-3">
           <div className="flex items-center gap-2">
-            {/* Voice status pill */}
             <span
               className={cn(
                 "flex items-center gap-1.5 text-xs px-3 py-1 rounded-full font-medium",
@@ -627,7 +624,6 @@ const RoomPage = () => {
             </span>
           </div>
 
-          {/* User avatar */}
           <Avatar className="size-8 ring-1 ring-gray-700">
             <AvatarImage
               alt={roomLoader?.userData?.fullName}
@@ -639,7 +635,6 @@ const RoomPage = () => {
           </Avatar>
         </div>
 
-        {/* Topic */}
         <div className="px-4 mb-4">
           <p className="text-gray-300 text-sm font-medium line-clamp-2">
             {roomLoader.roomData?.topic}
@@ -656,7 +651,6 @@ const RoomPage = () => {
           </div>
         </div>
 
-        {/* Participants grid */}
         <div className="flex-1 overflow-y-auto px-4">
           <div className="grid grid-cols-2 gap-3">
             {roomData?.users?.map((item, i) => (
@@ -679,9 +673,7 @@ const RoomPage = () => {
           </div>
         </div>
 
-        {/* Bottom controls */}
         <div className="shrink-0 px-4 pb-8 pt-4 flex items-center justify-between gap-3">
-          {/* Leave */}
           <Drawer>
             <DrawerTrigger asChild>
               <Button
@@ -729,7 +721,6 @@ const RoomPage = () => {
             </DrawerContent>
           </Drawer>
 
-          {/* Mute toggle */}
           <Button
             onClick={toggleMute}
             disabled={
@@ -749,13 +740,11 @@ const RoomPage = () => {
             )}
           </Button>
 
-          {/* Participants count */}
           <div className="flex items-center gap-1.5 text-gray-400 text-sm">
             <Users className="w-4 h-4" />
             <span>{count}</span>
           </div>
 
-          {/* Chat */}
           <Sheet open={openChatSheet} onOpenChange={setOpenChatSheet}>
             <SheetTrigger asChild>
               <Button className="rounded-full w-12 h-12 p-0 bg-gray-800 border border-gray-700 hover:bg-gray-700">
@@ -803,13 +792,8 @@ const RoomPage = () => {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // DESKTOP ROOM VIEW
-  // ─────────────────────────────────────────────────────────────────────────
-
   return (
     <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
-      {/* Header */}
       <div className="shrink-0 border-b border-gray-800/60 px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-4 min-w-0">
           <h1 className="text-white text-sm font-medium truncate max-w-xs">
@@ -828,7 +812,6 @@ const RoomPage = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Voice status pill */}
           <span
             className={cn(
               "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium",
@@ -878,11 +861,8 @@ const RoomPage = () => {
         </div>
       </div>
 
-      {/* Body */}
       <div className="flex-1 flex min-h-0">
-        {/* Left: participants + controls */}
         <div className="flex-1 flex flex-col p-6 min-w-0">
-          {/* Participant grid */}
           <div className="flex-1 flex items-center justify-center">
             <div
               className={cn(
@@ -914,9 +894,7 @@ const RoomPage = () => {
             </div>
           </div>
 
-          {/* Controls bar */}
           <div className="shrink-0 flex items-center justify-between pt-4 border-t border-gray-800/50">
-            {/* Leave */}
             <Drawer>
               <DrawerTrigger asChild>
                 <Button
@@ -969,7 +947,6 @@ const RoomPage = () => {
               </DrawerContent>
             </Drawer>
 
-            {/* Center controls */}
             <div className="flex items-center gap-2">
               <Button
                 onClick={toggleMute}
@@ -993,7 +970,6 @@ const RoomPage = () => {
               </Button>
             </div>
 
-            {/* Room ID copy */}
             <Button
               variant="ghost"
               className="text-gray-500 hover:text-gray-300 text-xs font-mono flex items-center gap-2 hover:bg-gray-800 rounded-xl px-3 h-9"
@@ -1004,7 +980,6 @@ const RoomPage = () => {
           </div>
         </div>
 
-        {/* Right: Chat panel */}
         <div className="flex flex-col shrink-0  border-l border-gray-800/60">
           <div className="px-4 py-3 border-b border-gray-800/60 flex items-center gap-2 shrink-0">
             <MessageSquareText className="w-4 h-4 text-gray-500" />
@@ -1026,9 +1001,6 @@ const RoomPage = () => {
 
 export default RoomPage;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// UserCard
-// ─────────────────────────────────────────────────────────────────────────────
 
 type UserCardProps = {
   participant: IUser;
