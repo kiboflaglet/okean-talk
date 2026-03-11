@@ -289,12 +289,12 @@ const RoomPage = () => {
     setVoiceStatus("idle");
   }, []);
 
-  function createPeerConnection(roomId: string): RTCPeerConnection {
+  function createPeerConnection(): RTCPeerConnection {
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
     pc.onicecandidate = (e) => {
       if (e.candidate)
-        sendVoiceSignal(roomId, {
+        sendVoiceSignal({
           type: "ice",
           senderId: MY_ID,
           payload: e.candidate.toJSON(),
@@ -325,7 +325,7 @@ const RoomPage = () => {
     return pc;
   }
 
-  function sendVoiceSignal(roomId: string, msg: SignalMessage) {
+  function sendVoiceSignal(msg: SignalMessage) {
     voiceChannelRef.current?.send({
       type: "broadcast",
       event: "signal",
@@ -345,7 +345,7 @@ const RoomPage = () => {
     iceCandidateBufferRef.current = [];
   }
 
-  async function handleVoiceSignal(roomId: string, raw: SignalMessage) {
+  async function handleVoiceSignal( raw: SignalMessage) {
     if (raw.senderId === MY_ID) return;
     const pc = pcRef.current;
 
@@ -354,7 +354,7 @@ const RoomPage = () => {
       isCallerRef.current = true;
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      sendVoiceSignal(roomId, {
+      sendVoiceSignal({
         type: "offer",
         senderId: MY_ID,
         payload: offer,
@@ -366,7 +366,7 @@ const RoomPage = () => {
     if (raw.type === "leave") {
       setVoiceStatus("waiting");
       pcRef.current?.close();
-      const fresh = createPeerConnection(roomId);
+      const fresh = createPeerConnection();
       pcRef.current = fresh;
       localStreamRef.current
         ?.getTracks()
@@ -384,7 +384,7 @@ const RoomPage = () => {
       await drainIceCandidates(pc);
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
-      sendVoiceSignal(roomId, {
+      sendVoiceSignal({
         type: "answer",
         senderId: MY_ID,
         payload: answer,
@@ -419,7 +419,7 @@ const RoomPage = () => {
       localStreamRef.current = stream;
       setMicPermissionGranted(true);
 
-      const pc = createPeerConnection(roomId);
+      const pc = createPeerConnection();
       pcRef.current = pc;
       stream.getTracks().forEach((t) => pc.addTrack(t, stream));
 
@@ -433,7 +433,7 @@ const RoomPage = () => {
           { event: "signal" },
           async ({ payload }: { payload: SignalMessage }) => {
             try {
-              await handleVoiceSignal(roomId, payload);
+              await handleVoiceSignal(payload);
             } catch (e) {
               console.error(e);
             }
@@ -441,7 +441,7 @@ const RoomPage = () => {
         )
         .subscribe((s) => {
           if (s !== "SUBSCRIBED") return;
-          sendVoiceSignal(roomId, { type: "join", senderId: MY_ID });
+          sendVoiceSignal({ type: "join", senderId: MY_ID });
           setVoiceStatus("waiting");
         });
 
