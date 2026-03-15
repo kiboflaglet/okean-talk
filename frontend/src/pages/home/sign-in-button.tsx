@@ -4,12 +4,17 @@ import { Button } from "../../components/ui/button";
 import { Icons } from "../../components/ui/icons";
 import { supabase } from "../../lib/supabaseClient";
 import { Loader } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type SignInButtonProps = {
   showTitle?: boolean;
+  className?: string;
 };
 
-export default function SignInButton({ showTitle = false }: SignInButtonProps) {
+export default function SignInButton({
+  showTitle = false,
+  className,
+}: SignInButtonProps) {
   const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
 
   async function signInWithGoogle() {
@@ -31,13 +36,18 @@ export default function SignInButton({ showTitle = false }: SignInButtonProps) {
   }
 
   return (
-    <Button onClick={signInWithGoogle} disabled={isGoogleLoading}>
+<Button
+  variant="ghost"
+  onClick={signInWithGoogle}
+  disabled={isGoogleLoading}
+  className={cn("border border-muted py-4 pr-1 w-full", className)}
+>
       {isGoogleLoading ? (
         <Loader className="size-4 animate-spin" />
       ) : (
         <>
           <Icons.google className="size-6" />
-          {showTitle && "Sign in"}
+          <span className="text-md font-semibold"> {showTitle && "Sign in"}</span>
         </>
       )}
     </Button>

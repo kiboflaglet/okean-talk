@@ -38,7 +38,10 @@ const Chat = ({ ...props }: ChatProps) => {
   useEffect(() => {
     if (!openEmojiPicker) return;
     const handler = (e: MouseEvent) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(e.target as Node)
+      ) {
         setOpenEmojiPicker(false);
       }
     };
@@ -78,7 +81,10 @@ const Chat = ({ ...props }: ChatProps) => {
     };
 
     const messageValidated = messageCreateSchema.safeParse(request);
-    if (!messageValidated.success) { console.log(messageValidated.error); return; }
+    if (!messageValidated.success) {
+      console.log(messageValidated.error);
+      return;
+    }
 
     const localMessage: IMessage = {
       id: request.tempId,
@@ -91,12 +97,16 @@ const Chat = ({ ...props }: ChatProps) => {
     setMessages((prev) => [...prev, localMessage]);
     setNewMessage("");
 
-    const { error } = await supabase.from("room_messages").insert([messageValidated.data]);
+    const { error } = await supabase
+      .from("room_messages")
+      .insert([messageValidated.data]);
 
     if (error) {
       console.log(error);
       setMessages((prev) =>
-        prev.map((msg) => msg.id === request.tempId ? { ...msg, status: "failed" } : msg)
+        prev.map((msg) =>
+          msg.id === request.tempId ? { ...msg, status: "failed" } : msg
+        )
       );
     }
   };
@@ -115,7 +125,9 @@ const Chat = ({ ...props }: ChatProps) => {
 
     setMessageDeletingLoading(async () => {
       setMessages((prev) =>
-        prev.map((msg) => msg.id === message.id ? { ...msg, status: "pending" } : msg)
+        prev.map((msg) =>
+          msg.id === message.id ? { ...msg, status: "pending" } : msg
+        )
       );
       const { error } = await supabase
         .from("room_messages")
@@ -125,7 +137,9 @@ const Chat = ({ ...props }: ChatProps) => {
       if (error) {
         console.log(error);
         setMessages((prev) =>
-          prev.map((msg) => msg.id === message.id ? { ...msg, status: "sent" } : msg)
+          prev.map((msg) =>
+            msg.id === message.id ? { ...msg, status: "sent" } : msg
+          )
         );
       }
     });
@@ -135,20 +149,41 @@ const Chat = ({ ...props }: ChatProps) => {
     getRoomMessages();
     const roomsChannel = supabase
       .channel("on_room_messages_change")
-      .on("postgres_changes", { event: "*", schema: "public", table: "room_messages", filter: `roomId=eq.${props.roomId}` }, getRoomMessages)
-      .on("postgres_changes", { event: "*", schema: "public", table: "roomparticipants", filter: `roomid=eq.${props.roomId}` }, getRoomMessages)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "room_messages",
+          filter: `roomId=eq.${props.roomId}`,
+        },
+        getRoomMessages
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "roomparticipants",
+          filter: `roomid=eq.${props.roomId}`,
+        },
+        getRoomMessages
+      )
       .subscribe();
-    return () => { supabase.removeChannel(roomsChannel); };
+    return () => {
+      supabase.removeChannel(roomsChannel);
+    };
   }, []);
 
   const canSend = (newMessage?.trim().length || 0) > 0;
 
   return (
-    <div className={cn(
-      "relative flex flex-col h-full bg-gray-950 overflow-hidden",
-      isMobile && "bg-gray-950"
-    )}>
-
+    <div
+      className={cn(
+        "relative flex flex-col h-full bg-gray-950 overflow-hidden",
+        isMobile && "bg-gray-950"
+      )}
+    >
       {/* Message list */}
       <ScrollToBottom
         followButtonClassName="hidden"
@@ -160,7 +195,7 @@ const Chat = ({ ...props }: ChatProps) => {
         {messagesLoading && (
           <div className="flex items-center justify-center py-8">
             <div className="flex gap-1">
-              {[0, 1, 2].map(i => (
+              {[0, 1, 2].map((i) => (
                 <span
                   key={i}
                   className="w-1.5 h-1.5 rounded-full bg-gray-600 animate-bounce"
@@ -211,20 +246,28 @@ const Chat = ({ ...props }: ChatProps) => {
             skinTonesDisabled
             searchDisabled={isMobile}
             previewConfig={{ showPreview: false }}
-            style={{ width: "100%", border: "1px solid #1f2937", borderRadius: "16px" } as React.CSSProperties}
+            style={
+              {
+                width: "100%",
+                border: "1px solid #1f2937",
+                borderRadius: "16px",
+              } as React.CSSProperties
+            }
           />
         </div>
       )}
 
       {/* Input bar */}
-      <div className="shrink-0 px-3 pb-3 pt-2 border-t border-gray-800/50">
-        <div className={cn(
-          "flex items-center gap-1.5 bg-gray-900 border border-gray-800 rounded-2xl px-3 py-1.5 transition-all duration-200 focus-within:border-gray-600"
-        )}>
+      <div className="shrink-0 px-3 pb-3 pt-2  border-gray-800/50">
+        <div
+          className={cn(
+            "flex items-center gap-1.5 bg-gray-900 border border-gray-800 rounded-2xl px-3 py-1.5 transition-all duration-200 focus-within:border-gray-600"
+          )}
+        >
           {isDesktop && (
             <button
               type="button"
-              onClick={() => setOpenEmojiPicker(p => !p)}
+              onClick={() => setOpenEmojiPicker((p) => !p)}
               className={cn(
                 "w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors shrink-0",
                 openEmojiPicker && "text-gray-300 bg-gray-800"
@@ -250,7 +293,10 @@ const Chat = ({ ...props }: ChatProps) => {
 
           <button
             type="button"
-            onClick={() => addMessage(newMessage || "")}
+            onClick={() => {
+              addMessage(newMessage || "");
+              messageInputBoxRef.current?.focus();
+            }}
             disabled={!canSend}
             className={cn(
               "w-8 h-8 flex items-center justify-center rounded-xl transition-all duration-200 shrink-0",
@@ -269,10 +315,6 @@ const Chat = ({ ...props }: ChatProps) => {
 
 export default Chat;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MessageSingle
-// ─────────────────────────────────────────────────────────────────────────────
-
 type MessageSingleProps = {
   owner?: boolean;
   message: IMessage;
@@ -288,21 +330,23 @@ function MessageSingle({
   owner = false,
   compact = false,
 }: MessageSingleProps) {
-  const StatusIcon = MessageStatuses.find((item) => item.key === message.status)?.icon;
+  const StatusIcon = MessageStatuses.find(
+    (item) => item.key === message.status
+  )?.icon;
 
   const isDeleted = message.status === "deleted";
-  const isFailed  = message.status === "failed";
+  const isFailed = message.status === "failed";
   const isPending = message.status === "pending";
 
   return (
-    <div className={cn(
-      "flex group",
-      owner ? "justify-end" : "justify-start",
-      compact ? "mt-0.5" : "mt-2"
-    )}>
-      <div className={cn(
-        "relative max-w-[78%]",
-      )}>
+    <div
+      className={cn(
+        "flex group",
+        owner ? "justify-end" : "justify-start",
+        compact ? "mt-0.5" : "mt-2"
+      )}
+    >
+      <div className={cn("relative max-w-[78%]")}>
         {/* Author name — only on first message in a group */}
         {!compact && !owner && (
           <p className="text-gray-500 text-[11px] font-medium mb-1 px-1">
@@ -310,16 +354,17 @@ function MessageSingle({
           </p>
         )}
 
-        <div className={cn(
-          "relative px-3 py-2 rounded-2xl text-sm transition-opacity duration-200",
-          owner
-            ? "bg-blue-600 text-white rounded-tr-sm"
-            : "bg-gray-800 text-gray-200 rounded-tl-sm",
-          isPending && "opacity-60",
-          isFailed  && "bg-red-900/60 border border-red-800/60 text-red-200",
-          isDeleted && "bg-transparent border border-gray-800"
-        )}>
-
+        <div
+          className={cn(
+            "relative px-3 py-2 rounded-2xl text-sm transition-opacity duration-200",
+            owner
+              ? "bg-blue-600 text-white rounded-tr-sm"
+              : "bg-gray-800 text-gray-200 rounded-tl-sm",
+            isPending && "opacity-60",
+            isFailed && "bg-red-900/60 border border-red-800/60 text-red-200",
+            isDeleted && "bg-transparent border border-gray-800"
+          )}
+        >
           {/* Delete dropdown — shown on hover for own messages */}
           {owner && !isDeleted && message.status === "sent" && (
             <DropdownMenu>
@@ -331,7 +376,10 @@ function MessageSingle({
                   <Trash2 className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="z-40 bg-gray-900 border-gray-700" side="left">
+              <DropdownMenuContent
+                className="z-40 bg-gray-900 border-gray-700"
+                side="left"
+              >
                 <DropdownMenuItem
                   disabled={messageDeletingLoading}
                   onClick={() => deleteMessage(message)}
@@ -352,15 +400,19 @@ function MessageSingle({
               <span>Message deleted</span>
             </div>
           ) : (
-            <span className="break-words leading-relaxed">{message.content}</span>
+            <span className="break-words leading-relaxed">
+              {message.content}
+            </span>
           )}
 
           {/* Status icon for own messages */}
           {owner && StatusIcon && !isDeleted && (
-            <span className={cn(
-              "inline-flex items-center ml-2 opacity-70",
-              isFailed && "opacity-100"
-            )}>
+            <span
+              className={cn(
+                "inline-flex items-center ml-2 opacity-70",
+                isFailed && "opacity-100"
+              )}
+            >
               <StatusIcon
                 className={cn(isFailed ? "text-red-300" : "text-blue-200")}
                 size={12}
@@ -371,7 +423,9 @@ function MessageSingle({
 
         {/* Failed label */}
         {isFailed && (
-          <p className="text-red-500 text-[10px] mt-0.5 px-1 text-right">Failed to send</p>
+          <p className="text-red-500 text-[10px] mt-0.5 px-1 text-right">
+            Failed to send
+          </p>
         )}
       </div>
     </div>
