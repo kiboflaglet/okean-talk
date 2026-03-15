@@ -3,7 +3,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "../components/ui/avatar";
+} from "../../components/ui/avatar";
 
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { supabase } from "@/lib/supabaseClient";
@@ -15,17 +15,17 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "../components/ui/drawer";
+} from "../../components/ui/drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-import { Separator } from "../components/ui/seperator";
+} from "../../components/ui/dropdown-menu";
+import { Separator } from "../../components/ui/seperator";
 import { useBackButtonClose } from "@/hooks/useBackButtonClose";
-import SignInButton from "./home/SignInButton";
+import SignInButton from "./SignInButton";
 
 type HeaderProps = {
   homeLoader: HomeLoader;

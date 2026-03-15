@@ -3,8 +3,8 @@ import type { HomeLoader } from "@/types";
 import { MessageSquareDashed } from "lucide-react";
 import { useState } from "react";
 import { useLoaderData } from "react-router";
-import RoomSingle from "./home/RoomSingle";
-import { SignInDialog } from "./home/SignInDialog";
+import RoomSingle from "./RoomSingle";
+import { SignInDialog } from "./SignInDialog";
 
 export const Rooms = () => {
   const { rooms, loading } = useRoomsContext();

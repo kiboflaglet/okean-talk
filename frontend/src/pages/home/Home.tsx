@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLoaderData } from "react-router";
-import { StarField } from "./home/BackgroundLive";
-import Tools from "./home/Tools";
+import { StarField } from "./BackgroundLive";
+import Tools from "./Tools";
 import { useRoomsContext } from "@/provider/roomsContext";
 import type { HomeLoader, TLanguage } from "@/types";
 import Header from "./Header";

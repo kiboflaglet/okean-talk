@@ -8,7 +8,7 @@ const PrivacyAndTerms = React.lazy(() => import("@/pages/privacy-and-terms/Priva
 const RoomPage = React.lazy(() => import("@/pages/protected/room/RoomPage.tsx")) 
 import type { HomeLoader, RoomLoader } from "@/types.ts";
 import { supabase } from "@/lib/supabaseClient";
-import Home from "@/pages/Home";
+import Home from "@/pages/home/Home";
 
 
 async function roomLoader({ params }: LoaderFunctionArgs) {
