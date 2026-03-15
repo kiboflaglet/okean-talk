@@ -1,36 +1,26 @@
 import { useBackButtonClose } from "@/hooks/useBackButtonClose";
 import { useVisualViewport } from "@/hooks/useVisualViewport";
+import { useRoomStore } from "@/stores/useRoomStore";
 import { ArrowLeft, MessageSquareText } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "../../../../components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "../../../../components/ui/sheet";
-import { type RoomLoader } from "../../../../types";
 import Chat from "../Chat";
 import UserSettingsMobile from "./UserSettingsMobile";
 
-type ChatMobileSheetProps = {
-  roomLoader: RoomLoader;
-  userInitials: string;
-  logOut: () => void;
-  count: number;
-  roomId: string | null;
-};
+const ChatMobileSheet = () => {
+  const roomData = useRoomStore((s) => s.roomData);
 
-const ChatMobileSheet = ({
-  roomLoader,
-  userInitials,
-  logOut,
-  count,
-  roomId,
-}: ChatMobileSheetProps) => {
+  const count = useMemo(() => {
+    return roomData?.users?.length || 0;
+  }, []);
   const [openChatSheet, setOpenChatSheet] = useState(false);
 
   const { height, offsetTop } = useVisualViewport();
-
 
   const handleClose = () => {
     setOpenChatSheet(false);
@@ -43,8 +33,9 @@ const ChatMobileSheet = ({
     setOpenChatSheet(false);
   });
   return (
-    <Sheet open={openChatSheet} 
-     onOpenChange={(open) => {
+    <Sheet
+      open={openChatSheet}
+      onOpenChange={(open) => {
         !open ? handleClose() : setOpenChatSheet(open);
       }}
     >
@@ -74,18 +65,10 @@ const ChatMobileSheet = ({
             <p className="text-white font-medium text-sm flex-1">
               Chat · {count} {count === 1 ? "person" : "people"}
             </p>
-            <UserSettingsMobile
-              roomLoader={roomLoader}
-              userInitials={userInitials}
-              logOut={logOut}
-            />
+            <UserSettingsMobile />
           </div>
           <div className="flex-1 min-h-0">
-            <Chat
-              user={roomLoader.userData}
-              roomId={roomId || ""}
-              userId={roomLoader.userData?.id || ""}
-            />
+            <Chat />
           </div>
         </div>
       </SheetContent>

@@ -1,5 +1,6 @@
 import { Separator } from "@/components/ui/seperator";
 import { useBackButtonClose } from "@/hooks/useBackButtonClose";
+import { useRoomStore } from "@/stores/useRoomStore";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 import {
@@ -14,19 +15,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../../../../components/ui/drawer";
-import { type RoomLoader } from "../../../../types";
 
-type UserSettingsMobileProps = {
-  roomLoader: RoomLoader;
-  userInitials: string;
-  logOut: () => void;
-};
+const UserSettingsMobile = () => {
+  const userInitials = useRoomStore((s) => s.userInitials);
+  const logOut = useRoomStore((s) => s.logOut);
+  const userData = useRoomStore((s) => s.userData);
 
-const UserSettingsMobile = ({
-  roomLoader,
-  userInitials,
-  logOut,
-}: UserSettingsMobileProps) => {
   const [openUserSettings, setOpenUserSettings] = useState(false);
   const handleClose = () => {
     setOpenUserSettings(false);
@@ -47,10 +41,7 @@ const UserSettingsMobile = ({
     >
       <DrawerTrigger asChild>
         <Avatar className="size-9 ring-2 ring-white/20">
-          <AvatarImage
-            alt={roomLoader?.userData?.fullName}
-            src={roomLoader?.userData?.avatar_url}
-          />
+          <AvatarImage alt={userData?.fullName} src={userData?.avatar_url} />
           <AvatarFallback className="bg-white/10 text-white">
             {userInitials}
           </AvatarFallback>
@@ -62,16 +53,14 @@ const UserSettingsMobile = ({
             <div className="flex flex-col gap-2 items-center">
               <Avatar className="size-16 ring-2 ring-white/20">
                 <AvatarImage
-                  alt={roomLoader?.userData?.fullName}
-                  src={roomLoader?.userData?.avatar_url}
+                  alt={userData?.fullName}
+                  src={userData?.avatar_url}
                 />
                 <AvatarFallback className="bg-white/10 text-white text-xl">
                   {userInitials}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-white">
-                {roomLoader?.userData?.fullName}
-              </span>
+              <span className="text-white">{userData?.fullName}</span>
             </div>
           </DrawerTitle>
         </DrawerHeader>

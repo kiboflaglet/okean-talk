@@ -3,17 +3,16 @@ import { useState } from "react";
 import { useLoaderData } from "react-router";
 import { useRoomsContext } from "../../provider/roomsContext";
 import type { HomeLoader } from "../../types";
-import RoomSingle from "./room-single";
-import { SignInDialog } from "./sign-in-dialog";
+import RoomSingle from "./RoomSingle";
+import { SignInDialog } from "./SignInDialog";
 
-const Rooms = () => {
+export const Rooms = () => {
   const { rooms, loading } = useRoomsContext();
   const loaderData: HomeLoader = useLoaderData();
   const [signInOpen, setSignInOpen] = useState(false);
 
   return (
     <section className="mt-6 pb-10">
-      {/* Loading state */}
       {loading && (
         <div className="grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -22,7 +21,6 @@ const Rooms = () => {
         </div>
       )}
 
-      {/* Empty state */}
       {!loading && rooms.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 gap-4 text-center animate-fade-in">
           <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -37,7 +35,6 @@ const Rooms = () => {
         </div>
       )}
 
-      {/* Rooms grid */}
       {!loading && rooms.length > 0 && (
         <div className="grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2 lg:grid-cols-3 animate-fade-in">
           {rooms.map((item, i) => (
@@ -97,4 +94,4 @@ function RoomCardSkeleton() {
   );
 }
 
-export default Rooms;
+export default Rooms

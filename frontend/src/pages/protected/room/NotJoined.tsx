@@ -1,40 +1,32 @@
+import { Loader, Mic, MicOff } from "lucide-react";
 import {
-    Loader,
-    Mic,
-    MicOff
-} from "lucide-react";
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
 } from "../../../components/ui/avatar";
 import { Button } from "../../../components/ui/button";
 import { cn } from "../../../lib/utils";
-import { type RoomLoader } from "../../../types";
+import { useRoomStore } from "@/stores/useRoomStore";
+import { useVoiceRoom } from "@/hooks/useVoiceRoom";
+import { useMemo } from "react";
 
-type NotJoinedProps = {
-  roomLoader: RoomLoader;
-  userInitials: string;
-  handleMicToggle: () => void;
-  micEnabled: boolean;
-  micPermissionGranted: boolean | null;
-  joinRoom: () => void;
-  error: string | null;
-  userJoinLoading: boolean;
-  count: number;
-};
+const NotJoined = () => {
+  const roomData = useRoomStore((s) => s.roomData);
+  const roomId = useRoomStore((s) => s.roomId) || "";
+  const userData = useRoomStore((s) => s.userData);
+  const micEnabled = useRoomStore((s) => s.micEnabled);
+  const userInitials = useRoomStore((s) => s.userInitials);
+  const joinError = useRoomStore((s) => s.joinError);
+  const joinLoading = useRoomStore((s) => s.joinLoading);
+  const userId = useRoomStore((s) => s.userData?.id) || "";
+  const joinRoom = useRoomStore((s) => s.joinRoom);
+  const micPermissionGranted = useVoiceRoom().micPermissionGranted;
+  const handleMicToggle = useVoiceRoom().handleMicToggle;
 
-const NotJoined = ({
-  roomLoader,
-  userInitials,
-  handleMicToggle,
-  micEnabled,
-  micPermissionGranted,
-  joinRoom,
-  error,
-  userJoinLoading,
-  count,
-}: NotJoinedProps) => {
+  const count = useMemo(() => {
+    return roomData?.users?.length || 0;
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-sm flex flex-col items-center gap-6">
@@ -43,7 +35,7 @@ const NotJoined = ({
             You're about to join
           </p>
           <h1 className="text-white text-xl font-semibold leading-snug line-clamp-2">
-            {roomLoader.roomData?.topic}
+            {roomData?.topic}
           </h1>
         </div>
 
@@ -51,8 +43,8 @@ const NotJoined = ({
           <div className="w-24 h-24 rounded-full ring-2 ring-gray-700 overflow-hidden bg-gray-800 flex items-center justify-center">
             <Avatar className="size-24">
               <AvatarImage
-                alt={roomLoader.userData?.fullName}
-                src={roomLoader.userData?.avatar_url}
+                alt={userData?.fullName}
+                src={userData?.avatar_url}
               />
               <AvatarFallback className="text-2xl bg-gray-800 text-white">
                 {userInitials}
@@ -62,7 +54,7 @@ const NotJoined = ({
         </div>
 
         <p className="text-gray-300 text-base font-medium">
-          {roomLoader.userData?.fullName}
+          {userData?.fullName}
         </p>
 
         <button
@@ -113,14 +105,16 @@ const NotJoined = ({
           </p>
         )}
 
-        {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+        {joinError && (
+          <p className="text-xs text-red-400 text-center">{joinError}</p>
+        )}
 
         <Button
-          onClick={joinRoom}
-          disabled={userJoinLoading}
+          onClick={() => {joinRoom(roomId, userId)}}
+          disabled={joinLoading}
           className="w-full h-12 rounded-2xl bg-white text-black hover:bg-gray-100 font-semibold text-sm transition-all"
         >
-          {userJoinLoading ? (
+          {joinLoading ? (
             <>
               <Loader className="animate-spin w-4 h-4 mr-2" /> Joining…
             </>

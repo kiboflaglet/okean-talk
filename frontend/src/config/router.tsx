@@ -4,7 +4,7 @@ import {
     type LoaderFunctionArgs
 } from "react-router";
 import React from "react";
-const Home = React.lazy(() => import("@/pages/home/home.tsx")) 
+const Home = React.lazy(() => import("@/pages/home/Home")) 
 const PrivacyAndTerms = React.lazy(() => import("@/pages/privacy-and-terms/PrivacyAndTerms.tsx")) 
 const RoomPage = React.lazy(() => import("@/pages/protected/room/RoomPage.tsx")) 
 import type { HomeLoader, RoomLoader } from "@/types.ts";

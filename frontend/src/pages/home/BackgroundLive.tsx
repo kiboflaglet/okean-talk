@@ -64,19 +64,16 @@ export function StarField() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       for (const star of starsRef.current) {
-        // Staggered birth
         if (!star.born) {
           if (elapsed < star.bornAt) continue;
           star.born = true;
         }
 
-        // Intro fade-in over 1400ms
         const age = elapsed - star.bornAt;
         if (star.introOpacity < 1) {
           star.introOpacity = Math.min(1, age / 1400);
         }
 
-        // Twinkle
         star.opacity += star.opacitySpeed * star.opacityDirection;
         if (star.opacity >= star.maxOpacity) {
           star.opacity = star.maxOpacity;
@@ -87,7 +84,6 @@ export function StarField() {
           star.opacityDirection = 1;
         }
 
-        // Directional drift
         star.x += star.driftX;
         star.y += star.driftY;
 
@@ -98,7 +94,6 @@ export function StarField() {
 
         const alpha = star.opacity * star.introOpacity;
 
-        // Glow halo for bigger stars
         if (star.size > 1.3) {
           const r = star.size * 2.8;
           const glow = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, r);
@@ -110,7 +105,6 @@ export function StarField() {
           ctx.fill();
         }
 
-        // Core dot
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(215,228,255,${alpha})`;

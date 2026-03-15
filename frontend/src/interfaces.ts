@@ -24,7 +24,7 @@ export interface IMessage {
   userId: string;
   content: string;
   createdAt: string;
-  user?: IUser;
+  user: IUser | null;
   tempId: string;
   status: MessageStatus
 }

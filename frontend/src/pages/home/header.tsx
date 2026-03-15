@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { Separator } from "../../components/ui/seperator";
-import SignInButton from "./sign-in-button";
+import SignInButton from "./SignInButton";
 import { useBackButtonClose } from "@/hooks/useBackButtonClose";
 
 type HeaderProps = {

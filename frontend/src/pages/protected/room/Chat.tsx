@@ -1,3 +1,4 @@
+import { useRoomStore } from "@/stores/useRoomStore";
 import EmojiPicker from "emoji-picker-react";
 import { Ban, Send, Smile, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -10,19 +11,16 @@ import {
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
 import { useBreakpoint } from "../../../hooks/useBreakpoint";
-import type { IMessage, IUser } from "../../../interfaces";
+import type { IMessage } from "../../../interfaces";
 import { supabase } from "../../../lib/supabaseClient";
 import { cn } from "../../../lib/utils";
 import { MessageStatuses } from "../../../types";
 import { messageCreateSchema, type TmessageCreate } from "./schema";
 
-type ChatProps = {
-  roomId: string;
-  userId: string;
-  user?: IUser;
-};
+const Chat = () => {
+  const roomId = useRoomStore((s) => s.roomId) || "";
+  const userData = useRoomStore((s) => s.userData);
 
-const Chat = ({ ...props }: ChatProps) => {
   const { isMobile, isDesktop } = useBreakpoint();
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
@@ -34,7 +32,6 @@ const Chat = ({ ...props }: ChatProps) => {
   const messageInputBoxRef = useRef<HTMLInputElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
-  // Close emoji picker on outside click
   useEffect(() => {
     if (!openEmojiPicker) return;
     const handler = (e: MouseEvent) => {
@@ -50,13 +47,13 @@ const Chat = ({ ...props }: ChatProps) => {
   }, [openEmojiPicker]);
 
   const getRoomMessages = async () => {
-    if (!props.roomId) return;
+    if (!roomId) return;
     if (!hasLoadedOnceRef.current) setMessagesLoading(true);
 
     const { data, error } = await supabase
       .from("room_messages")
       .select("*, user:users!room_messages_userId_fkey(*)")
-      .eq("roomId", props.roomId)
+      .eq("roomId", roomId)
       .order("createdAt", { ascending: false })
       .limit(50);
 
@@ -75,8 +72,8 @@ const Chat = ({ ...props }: ChatProps) => {
 
     const request: TmessageCreate = {
       content: trimmed,
-      roomId: props.roomId,
-      userId: props.userId,
+      roomId: roomId,
+      userId: userData?.id || "",
       tempId: uuidv4(),
     };
 
@@ -91,7 +88,7 @@ const Chat = ({ ...props }: ChatProps) => {
       createdAt: new Date(Date.now()).toUTCString(),
       status: "pending",
       ...request,
-      user: props.user,
+      user: userData,
     };
 
     setMessages((prev) => [...prev, localMessage]);
@@ -120,8 +117,8 @@ const Chat = ({ ...props }: ChatProps) => {
   const deleteYourMessageForEveryone = (message: IMessage) => {
     if (message.status !== "sent") return;
     if (!message.id) return;
-    if (message.roomId !== props.roomId) return;
-    if (message.userId !== props.userId) return;
+    if (message.roomId !== roomId) return;
+    if (message.userId !== userData?.id) return;
 
     setMessageDeletingLoading(async () => {
       setMessages((prev) =>
@@ -155,7 +152,7 @@ const Chat = ({ ...props }: ChatProps) => {
           event: "*",
           schema: "public",
           table: "room_messages",
-          filter: `roomId=eq.${props.roomId}`,
+          filter: `roomId=eq.${roomId}`,
         },
         getRoomMessages
       )
@@ -165,7 +162,7 @@ const Chat = ({ ...props }: ChatProps) => {
           event: "*",
           schema: "public",
           table: "roomparticipants",
-          filter: `roomid=eq.${props.roomId}`,
+          filter: `roomid=eq.${roomId}`,
         },
         getRoomMessages
       )
@@ -216,7 +213,7 @@ const Chat = ({ ...props }: ChatProps) => {
         )}
 
         {messages.map((item, idx) => {
-          const isOwn = item.userId === props.userId;
+          const isOwn = item.userId === userData?.id;
           const prevMsg = messages[idx - 1];
           const isSameAuthorAsPrev = prevMsg && prevMsg.userId === item.userId;
 
@@ -233,7 +230,6 @@ const Chat = ({ ...props }: ChatProps) => {
         })}
       </ScrollToBottom>
 
-      {/* Emoji picker */}
       {openEmojiPicker && (
         <div
           ref={emojiPickerRef}
@@ -257,7 +253,6 @@ const Chat = ({ ...props }: ChatProps) => {
         </div>
       )}
 
-      {/* Input bar */}
       <div className="shrink-0 px-3 pb-3 pt-2  border-gray-800/50">
         <div
           className={cn(
@@ -347,7 +342,6 @@ function MessageSingle({
       )}
     >
       <div className={cn("relative max-w-[78%]")}>
-        {/* Author name — only on first message in a group */}
         {!compact && !owner && (
           <p className="text-gray-500 text-[11px] font-medium mb-1 px-1">
             {message.user?.fullName || "Unknown"}
@@ -365,7 +359,6 @@ function MessageSingle({
             isDeleted && "bg-transparent border border-gray-800"
           )}
         >
-          {/* Delete dropdown — shown on hover for own messages */}
           {owner && !isDeleted && message.status === "sent" && (
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -393,7 +386,6 @@ function MessageSingle({
             </DropdownMenu>
           )}
 
-          {/* Content */}
           {isDeleted ? (
             <div className="flex items-center gap-1.5 text-gray-600 italic text-xs">
               <Ban className="w-3.5 h-3.5 shrink-0" />
@@ -421,7 +413,6 @@ function MessageSingle({
           )}
         </div>
 
-        {/* Failed label */}
         {isFailed && (
           <p className="text-red-500 text-[10px] mt-0.5 px-1 text-right">
             Failed to send

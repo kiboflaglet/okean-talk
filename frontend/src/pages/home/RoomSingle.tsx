@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from "../../components/ui/tooltip";
 import type { IRoom, IUser } from "../../interfaces";
-import { cn } from "../../lib/utils";
+import { cn, NameToInitials } from "../../lib/utils";
 import { Languages } from "../../types";
 
 type RoomSingleProps = IRoom & {
@@ -166,10 +166,7 @@ function UserInRoomCard({
 }: UserInRoomCardProps) {
   const userInitials = useMemo(() => {
     if (!props.participant) return "";
-    return props.participant?.fullName
-      .split(" ")
-      .map((word: string) => word[0])
-      .join("");
+    return NameToInitials(props.participant.fullName);
   }, []);
   return (
     <Tooltip>

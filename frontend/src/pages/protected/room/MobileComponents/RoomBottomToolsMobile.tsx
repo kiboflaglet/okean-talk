@@ -1,3 +1,5 @@
+import { useVoiceRoom } from "@/hooks/useVoiceRoom";
+import { useRoomStore } from "@/stores/useRoomStore";
 import { Loader, Mic, MicOff, Phone } from "lucide-react";
 import { Button } from "../../../../components/ui/button";
 import {
@@ -10,44 +12,48 @@ import {
   DrawerTrigger,
 } from "../../../../components/ui/drawer";
 import { cn } from "../../../../lib/utils";
-import { type RoomLoader } from "../../../../types";
 import ChatMobileSheet from "./ChatMobileSheet";
+import { useBackButtonClose } from "@/hooks/useBackButtonClose";
+import { useState } from "react";
 
-type RoomBottomToolsMobileProps = {
-  roomLoader: RoomLoader;
-  userInitials: string;
-  logOut: () => void;
-  leaveRoom: (roomId: string | null) => void;
-  toggleMute: () => void;
-  count: number;
-  userLeaveLoading: boolean;
-  isMuted: boolean;
-  roomId: string | null;
-  micEnabled: boolean;
-};
+const RoomBottomToolsMobile = () => {
+  const handleMute = useVoiceRoom().handleMute;
+  const isMuted = useRoomStore((s) => s.isMuted);
+  const micEnabled = useRoomStore((s) => s.micEnabled);
+  const roomId = useRoomStore((s) => s.roomId) || "";
+  const userId = useRoomStore((s) => s.userData?.id) || "";
+  const leaveLoading = useRoomStore((s) => s.leaveLoading);
 
-const RoomBottomToolsMobile = ({
-  roomLoader,
-  userInitials,
-  logOut,
-  leaveRoom,
-  toggleMute,
-  count,
-  userLeaveLoading,
-  isMuted,
-  roomId,
-  micEnabled,
-}: RoomBottomToolsMobileProps) => {
+  const leaveRoom = useRoomStore((s) => s.leaveRoom);
+  const voiceCleanup = useVoiceRoom().voiceCleanup;
+
+  const [openLeaveDrawer, setOpenLeaveDrawer] = useState(false);
+  const handleClose = () => {
+    setOpenLeaveDrawer(false);
+    if (window.history.state?.modal) {
+      window.history.back();
+    }
+  };
+
+  useBackButtonClose(openLeaveDrawer, () => {
+    setOpenLeaveDrawer(false);
+  });
+
   return (
     <>
-      <Drawer>
+      <Drawer
+        open={openLeaveDrawer}
+        onOpenChange={(open) => {
+          !open ? handleClose() : setOpenLeaveDrawer(open);
+        }}
+      >
         <DrawerTrigger asChild>
           <Button
             variant="destructive"
             className="rounded-full w-12 h-12 p-0 bg-red-900/80 hover:bg-red-800 border border-red-800/50"
-            disabled={userLeaveLoading}
+            disabled={leaveLoading}
           >
-            {userLeaveLoading ? (
+            {leaveLoading ? (
               <Loader className="animate-spin w-4 h-4" />
             ) : (
               <Phone className="size-5" />
@@ -60,11 +66,15 @@ const RoomBottomToolsMobile = ({
           </DrawerHeader>
           <DrawerFooter>
             <Button
-              onClick={() => leaveRoom(roomId)}
-              disabled={userLeaveLoading}
+              onClick={() => {
+                leaveRoom(roomId, userId);
+                voiceCleanup(true);
+              }}
+              className={"text-sm py-4.5 px-6  border-destructive/40"}
+              disabled={leaveLoading}
               variant="destructive"
             >
-              {userLeaveLoading ? (
+              {leaveLoading ? (
                 <>
                   <Loader className="animate-spin w-4 h-4 mr-2" />
                   Leaving
@@ -74,10 +84,7 @@ const RoomBottomToolsMobile = ({
               )}
             </Button>
             <DrawerClose asChild>
-              <Button
-                variant="outline"
-                className="border-gray-700 text-gray-300"
-              >
+              <Button variant="outline" className={"text-sm py-4.5 px-6"}>
                 Cancel
               </Button>
             </DrawerClose>
@@ -86,7 +93,7 @@ const RoomBottomToolsMobile = ({
       </Drawer>
 
       <Button
-        onClick={toggleMute}
+        onClick={handleMute}
         disabled={!micEnabled}
         className={cn(
           "rounded-full w-12 h-12 p-0 border transition-all",
@@ -102,13 +109,7 @@ const RoomBottomToolsMobile = ({
         )}
       </Button>
 
-      <ChatMobileSheet
-        roomLoader={roomLoader}
-        userInitials={userInitials}
-        logOut={logOut}
-        count={count}
-        roomId={roomId}
-      />
+      <ChatMobileSheet />
     </>
   );
 };

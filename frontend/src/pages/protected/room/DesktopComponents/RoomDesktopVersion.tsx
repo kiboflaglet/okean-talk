@@ -1,60 +1,38 @@
+import { useVoiceRoom } from "@/hooks/useVoiceRoom";
+import { useRoomStore } from "@/stores/useRoomStore";
 import {
+  Check,
   Copy,
   Loader,
-  LogOutIcon,
   MessageSquareText,
   Mic,
   MicOff,
   Phone,
 } from "lucide-react";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "../../../../components/ui/avatar";
+import { useMemo } from "react";
 import { Button } from "../../../../components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../../../components/ui/dropdown-menu";
 import { cn } from "../../../../lib/utils";
-import { Languages, type RoomLoader } from "../../../../types";
+import { Languages } from "../../../../types";
 import Chat from "../Chat";
-import type { VoiceStatus } from "../types";
 import { UserCard } from "../UserCard";
+import UserSettingsDesktop from "./UserSettingsDesktop";
 
-type RoomDesktopVersionProps = {
-  roomLoader: RoomLoader;
-  userInitials: string;
-  leaveRoom: (roomId: string | null) => void;
-  toggleMute: () => void;
-  count: number;
-  userLeaveLoading: boolean;
-  isMuted: boolean;
-  logOut: () => void;
-  signOutLoading: boolean;
-  micEnabled: boolean;
-  roomId: string | null;
-  roomData: RoomLoader["roomData"];
-};
+const RoomDesktopVersion = () => {
+  const roomData = useRoomStore((s) => s.roomData);
+  const userId = useRoomStore((s) => s.userData?.id) || "";
+  const roomId = useRoomStore((s) => s.roomId) || "";
+  const micEnabled = useRoomStore((s) => s.micEnabled);
+  const leaveRoom = useRoomStore((s) => s.leaveRoom);
+  const leaveLoading = useRoomStore((s) => s.leaveLoading);
+  const copyRoomLink = useRoomStore((s) => s.copyRoomLink);
+  const isMuted = useRoomStore((s) => s.isMuted);
+  const handleMute = useVoiceRoom().handleMute;
+  const voiceCleanup = useVoiceRoom().voiceCleanup;
+  const roomLinkCopied = useRoomStore((s) => s.roomLinkCopied);
 
-const RoomDesktopVersion = ({
-  roomLoader,
-  userInitials,
-  leaveRoom,
-  toggleMute,
-  count,
-  userLeaveLoading,
-  isMuted,
-  logOut,
-  signOutLoading,
-  micEnabled,
-  roomId,
-  roomData,
-}: RoomDesktopVersionProps) => {
+  const count = useMemo(() => {
+    return roomData?.users?.length || 0;
+  }, []);
   return (
     <div className="h-screen bg-gray-950 flex flex-col overflow-hidden">
       <div className="shrink-0 border-b border-gray-800/60 px-6 h-20 flex items-center justify-between">
@@ -73,57 +51,7 @@ const RoomDesktopVersion = ({
             ))}
           </div>
         </div>
-
-        <div className="flex items-center gap-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar className="size-9 cursor-pointer ring-2 ring-white/20 hover:ring-white/40 transition-all">
-                <AvatarImage
-                  alt={roomLoader?.userData?.fullName}
-                  src={roomLoader.userData?.avatar_url}
-                />
-                <AvatarFallback className="bg-white/10 text-white text-sm">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              className="z-40 w-56 bg-gray-950 border-white/10 text-white"
-              side="bottom"
-              align="end"
-            >
-              <div className="flex items-center gap-3 px-3 py-3">
-                <Avatar className="size-11 ring-2 ring-white/20">
-                  <AvatarImage
-                    alt={roomLoader?.userData?.fullName}
-                    src={roomLoader.userData?.avatar_url}
-                  />
-                  <AvatarFallback className="bg-white/10 text-white text-sm">
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-semibold text-white truncate">
-                    {roomLoader?.userData?.fullName}
-                  </span>
-                </div>
-              </div>
-
-              <DropdownMenuSeparator className="bg-white/10" />
-
-              <DropdownMenuItem
-                disabled={signOutLoading}
-                onClick={logOut}
-                variant="destructive"
-                className="mx-1 mb-1 cursor-pointer"
-              >
-                <LogOutIcon className=" mr-2" />
-                {signOutLoading ? "Signing out..." : "Log out"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <UserSettingsDesktop />
       </div>
 
       <div className="flex-1 flex min-h-0">
@@ -145,8 +73,7 @@ const RoomDesktopVersion = ({
                 <div
                   key={item.participant.id}
                   className={cn(
-                    "bg-gray-900 border border-gray-800 rounded-3xl aspect-square flex flex-col items-center justify-center gap-3 transition-all duration-300",
-                 
+                    "bg-gray-900 border border-gray-800 rounded-3xl aspect-square flex flex-col items-center justify-center gap-3 transition-all duration-300"
                   )}
                 >
                   <UserCard
@@ -160,13 +87,16 @@ const RoomDesktopVersion = ({
 
           <div className="shrink-0 flex items-center justify-between py-4 px-6 border-t border-gray-800/50">
             <Button
-              onClick={() => leaveRoom(roomId)}
-              disabled={userLeaveLoading}
+              onClick={() => {
+                leaveRoom(roomId, userId);
+                voiceCleanup(true);
+              }}
+              disabled={leaveLoading}
               className={cn(
                 "rounded-full size-12 p-0 transition-all bg-red-900/70 hover:bg-red-800/80 text-red-200 border border-red-800/50 "
               )}
             >
-              {userLeaveLoading ? (
+              {leaveLoading ? (
                 <>
                   <Loader className="animate-spin size-5 " />
                 </>
@@ -179,10 +109,8 @@ const RoomDesktopVersion = ({
 
             <div className="flex items-center gap-2">
               <Button
-                onClick={toggleMute}
-                disabled={
-                  !micEnabled
-                }
+                onClick={handleMute}
+                disabled={!micEnabled}
                 className={cn(
                   "rounded-full size-12 p-0 border transition-all",
                   isMuted
@@ -201,9 +129,19 @@ const RoomDesktopVersion = ({
             <Button
               variant="ghost"
               className="text-gray-500 hover:text-gray-300 text-xs font-mono flex items-center gap-2 hover:bg-gray-800 rounded-xl px-3 h-9"
-              onClick={() => navigator.clipboard.writeText(roomId || "")}
+              onClick={() => {
+                copyRoomLink(roomId);
+              }}
             >
-              <Copy className="w-3 h-3" /> Copy link
+              {roomLinkCopied ? (
+                <>
+                  <Check className="w-3 h-3" /> Copy link
+                </>
+              ) : (
+                <>
+                <Copy className="w-3 h-3" /> Copy link
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -216,11 +154,7 @@ const RoomDesktopVersion = ({
               {count} {count === 1 ? "person" : "people"}
             </span>
           </div>
-          <Chat
-            user={roomLoader.userData}
-            roomId={roomId || ""}
-            userId={roomLoader.userData?.id || ""}
-          />
+          <Chat />
         </div>
       </div>
     </div>

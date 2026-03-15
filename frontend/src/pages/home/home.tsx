@@ -1,22 +1,20 @@
-
 import { useEffect, useState } from "react";
 import { useLoaderData } from "react-router";
-import { type HomeLoader, type TLanguage } from "../../../src/types";
+import { type HomeLoader, type TLanguage } from "../../types";
 import { useRoomsContext } from "../../provider/roomsContext";
-import Header from "./header";
-import Rooms from "./rooms";
-import { StarField } from "./star-field";
+import { StarField } from "./BackgroundLive";
 import Tools from "./Tools";
+import Rooms from "./Rooms";
+import Header from "./Header";
 
 const Home = () => {
   const homeLoader: HomeLoader = useLoaderData();
   const [selectedLanguages] = useState<TLanguage[]>([]);
-  const { setFilters} = useRoomsContext();
+  const { setFilters } = useRoomsContext();
 
   useEffect(() => {
     setFilters({ languages: selectedLanguages.map((item) => item.value) });
   }, [selectedLanguages]);
-
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden overflow-y-auto font-sans bg-background">

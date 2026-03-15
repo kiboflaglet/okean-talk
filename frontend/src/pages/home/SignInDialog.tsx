@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
-import SignInButton from "./sign-in-button";
+import SignInButton from "./SignInButton";
 
 type SignInDialogProps = {
   open: boolean;
@@ -17,7 +17,6 @@ export function SignInDialog({ open, onOpenChange, description }: SignInDialogPr
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-sm rounded-2xl p-8 border border-gray-200 dark:border-gray-800 shadow-xl">
-        {/* Icon badge */}
         <div className="mx-auto mb-2 w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           <svg
             viewBox="0 0 24 24"

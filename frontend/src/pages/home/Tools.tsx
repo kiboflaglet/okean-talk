@@ -15,14 +15,13 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from "@/components/ui/multi-select";
-import { useBackButtonClose } from "@/hooks/useBackButtonClose";
+import { useDrawerStack } from "@/hooks/useDrawerStack";
 import { useEffect, useMemo, useState } from "react";
 import { useLoaderData } from "react-router";
 import { Languages, type HomeLoader, type TLanguage } from "../../../src/types";
 import { Button } from "../../components/ui/button";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
@@ -37,30 +36,24 @@ import {
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { cn } from "../../lib/utils";
 import { useRoomsContext } from "../../provider/roomsContext";
-import { RoomCreate } from "./room-create";
+import { RoomCreate } from "./RoomCreateDesktop";
 
 const Tools = () => {
   const homeLoader: HomeLoader = useLoaderData();
   const [selectedLanguages, setSelectedLanguages] = useState<TLanguage[]>([]);
   const { isMobile } = useBreakpoint();
-  const [openMobileFilters, setOpenMobileFilters] = useState(false);
   const { setFilters, rooms } = useRoomsContext();
-  const [langDrawerOpen, setLangDrawerOpen] = useState(false);
+  const { states, open, close } = useDrawerStack(2);
+  const [openMobileFilters, langDrawerOpen] = states;
+
+  const openMainDrawer = () => open(0);
+  const openLangDrawer = () => open(1);
+  const closeLangDrawer = () => close(1);
+  const closeMainDrawer = () => close(0);
 
   useEffect(() => {
     setFilters({ languages: selectedLanguages.map((item) => item.value) });
   }, [selectedLanguages]);
-
-  const handleClose = () => {
-    setOpenMobileFilters(false);
-    if (window.history.state?.modal) {
-      window.history.back();
-    }
-  };
-
-  useBackButtonClose(openMobileFilters, () => {
-    setOpenMobileFilters(false);
-  });
 
   return (
     <div
@@ -75,103 +68,93 @@ const Tools = () => {
         }
       />
       <div className="min-w-0 flex-1">
-        <InputGroup className=" w-full py-4  backdrop-blur-md transition-colors">
+        <InputGroup className="w-full py-4 backdrop-blur-md transition-colors">
           <InputGroupAddon className="text-foreground/30">
             <Search className="size-4" />
           </InputGroupAddon>
           <InputGroupInput
             onChange={(e) => setFilters({ searchQuery: e.target.value })}
-            className="text-xs  bg-transparent placeholder:text-foreground/30"
+            className="text-xs bg-transparent placeholder:text-foreground/30"
             placeholder="Search rooms..."
           />
         </InputGroup>
       </div>
 
       {isMobile ? (
-        <>
-          <Drawer
-            open={openMobileFilters}
-            onOpenChange={(open) => {
-              !open ? handleClose() : setOpenMobileFilters(open);
-            }}
-          >
-            <DrawerTrigger asChild>
-              <Button
-                onClick={() => setOpenMobileFilters(true)}
-                variant="ghost"
-                className="border-muted text-foreground/30"
-              >
-                <div className="relative">
-                  <ListFilter className="size-4" />
-                  {selectedLanguages.length > 0 && (
-                    <div className="bg-destructive/50 rounded-full size-2 absolute -top-2 -right-2"></div>
-                  )}
-                </div>
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="">
-              <DrawerHeader>
-                <DrawerTitle className="text-white">Filters</DrawerTitle>
-              </DrawerHeader>
-              <div className="px-4">
-                <Button
-                  variant={"outline"}
-                  onClick={() => setLangDrawerOpen(true)}
-                  className={
-                    "w-full py-4.5 px-3 text-md transition-colors justify-between"
-                  }
-                >
-                  <span className="flex items-center gap-2 min-w-0">
-                    <Globe className="w-4 h-4 text-gray-9 shrink-0" />
-                    {selectedLanguages?.length > 0 ? (
-                      <span className="text-gray-12 truncate">
-                        {selectedLanguages
-                          .map((v) => Languages.find((l) => l === v)?.label)
-                          .filter(Boolean)
-                          .join(", ")}
-                      </span>
-                    ) : (
-                      <span className="text-gray-11">Filter by languages</span>
-                    )}
-                  </span>
-                  <span className="flex items-center gap-1.5 shrink-0 ml-2">
-                    {selectedLanguages?.length > 0 && (
-                      <span className="text-xs bg-gray-6 text-gray-11 rounded-full px-1.5 py-0.5">
-                        {selectedLanguages.length}
-                      </span>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-gray-9" />
-                  </span>
-                </Button>
+        <Drawer
+          open={openMobileFilters}
+          onOpenChange={(open) => {
+            if (open) openMainDrawer();
+            else closeMainDrawer();
+          }}
+        >
+          <DrawerTrigger asChild>
+            <Button variant="ghost" className="border-muted text-foreground/30">
+              <div className="relative">
+                <ListFilter className="size-4" />
+                {selectedLanguages.length > 0 && (
+                  <div className="bg-destructive/50 rounded-full size-2 absolute -top-2 -right-2" />
+                )}
               </div>
+            </Button>
+          </DrawerTrigger>
 
-              <LanguagePickerDrawer
-                open={langDrawerOpen}
-                onClose={() => {
-                  setLangDrawerOpen(false);
-                }}
-                value={selectedLanguages.map((item) => item.value) ?? []}
-                onChange={(values) => {
-                  setSelectedLanguages(
-                    Languages.filter((lang) => values.includes(lang.value))
-                  );
-                }}
-              />
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle className="text-white">Filters</DrawerTitle>
+            </DrawerHeader>
 
-              <DrawerFooter>
-                <DrawerClose asChild>
-                  <Button
-                    className={
-                      "text-sm py-4.5 px-6 bg-foreground text-background"
-                    }
-                  >
-                    Done
-                  </Button>
-                </DrawerClose>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
-        </>
+            <div className="px-4">
+              <Button
+                variant="outline"
+                onClick={openLangDrawer}
+                className="w-full py-4.5 px-3 text-md transition-colors justify-between"
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <Globe className="w-4 h-4 text-gray-9 shrink-0" />
+                  {selectedLanguages?.length > 0 ? (
+                    <span className="text-gray-12 truncate">
+                      {selectedLanguages
+                        .map((v) => Languages.find((l) => l === v)?.label)
+                        .filter(Boolean)
+                        .join(", ")}
+                    </span>
+                  ) : (
+                    <span className="text-gray-11">Filter by languages</span>
+                  )}
+                </span>
+                <span className="flex items-center gap-1.5 shrink-0 ml-2">
+                  {selectedLanguages?.length > 0 && (
+                    <span className="text-xs bg-gray-6 text-gray-11 rounded-full px-1.5 py-0.5">
+                      {selectedLanguages.length}
+                    </span>
+                  )}
+                  <ChevronRight className="w-4 h-4 text-gray-9" />
+                </span>
+              </Button>
+            </div>
+
+            <LanguagePickerDrawer
+              open={langDrawerOpen}
+              onClose={closeLangDrawer}
+              value={selectedLanguages.map((item) => item.value) ?? []}
+              onChange={(values) => {
+                setSelectedLanguages(
+                  Languages.filter((lang) => values.includes(lang.value))
+                );
+              }}
+            />
+
+            <DrawerFooter>
+              <Button
+                className="text-sm py-4.5 px-6 bg-foreground text-background"
+                onClick={closeMainDrawer}
+              >
+                Done
+              </Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
       ) : (
         <div style={{ width: 380 }}>
           <MultiSelect
@@ -185,7 +168,7 @@ const Tools = () => {
               <MultiSelectValue placeholder="Filter by languages" />
             </MultiSelectTrigger>
             <MultiSelectContent
-              className="text-lg "
+              className="text-lg"
               search={{ placeholder: "Search languages..." }}
               popoverClassname="w-94"
             >
@@ -246,21 +229,21 @@ function LanguagePickerDrawer({
           <DrawerTitle>Select Languages</DrawerTitle>
         </DrawerHeader>
 
-        <div className="px-4 min-w-0   relative ">
-          <InputGroup className=" w-full   backdrop-blur-md transition-colors py-4">
+        <div className="px-4 min-w-0 relative">
+          <InputGroup className="w-full backdrop-blur-md transition-colors py-4">
             <InputGroupAddon className="text-foreground/30">
               <Search className="size-4" />
             </InputGroupAddon>
             <InputGroupInput
               autoFocus
               onChange={(e) => setQuery(e.target.value)}
-              className="text-xs  bg-transparent placeholder:text-foreground/30 "
-              placeholder="Search lanugages..."
+              className="text-xs bg-transparent placeholder:text-foreground/30"
+              placeholder="Search languages..."
             />
           </InputGroup>
 
           {value.length > 0 && (
-            <div className=" py-3 flex flex-wrap gap-1.5 shrink-0 ">
+            <div className="py-3 flex flex-wrap gap-1.5 shrink-0">
               {value.map((v) => {
                 const lang = Languages.find((l) => l.value === v);
                 return (
@@ -282,6 +265,7 @@ function LanguagePickerDrawer({
             </div>
           )}
         </div>
+
         <div className="overflow-y-auto flex-1 px-4 pb-2 space-y-1">
           {filtered.length === 0 && (
             <p className="text-center text-sm text-gray-9 py-8">
@@ -293,10 +277,10 @@ function LanguagePickerDrawer({
             return (
               <Button
                 key={lang.value}
-                variant={"ghost"}
+                variant="ghost"
                 onClick={() => toggle(lang.value)}
                 className={cn(
-                  " whitespace-normal w-full  justify-between px-3 py-4.5 text-sm transition-colors",
+                  "whitespace-normal w-full justify-between px-3 py-4.5 text-sm transition-colors",
                   selected
                     ? "bg-gray-5 border border-gray-7 text-gray-12"
                     : "hover:bg-gray-4 text-gray-11 hover:text-gray-12"
@@ -311,7 +295,7 @@ function LanguagePickerDrawer({
 
         <DrawerFooter className="pt-2 shrink-0">
           <Button
-            className={"py-4.5"}
+            className="py-4.5"
             type="button"
             onClick={onClose}
             disabled={value.length === 0}
