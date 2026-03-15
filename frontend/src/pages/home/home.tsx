@@ -4,8 +4,8 @@ import { type HomeLoader, type TLanguage } from "../../types";
 import { useRoomsContext } from "../../provider/roomsContext";
 import { StarField } from "./BackgroundLive";
 import Tools from "./Tools";
-import Rooms from "./Rooms";
-import Header from "./Header";
+import Rooms from "./rooms";
+import Header from "./header";
 
 const Home = () => {
   const homeLoader: HomeLoader = useLoaderData();
