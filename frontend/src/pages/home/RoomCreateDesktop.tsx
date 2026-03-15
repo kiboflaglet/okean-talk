@@ -132,7 +132,7 @@ export function RoomCreate({ canCreate }: RoomCreateProps) {
   if (isMobile) {
     return (
       <RoomCreateMobile
-        userData={loaderData.userData}
+        userData={loaderData?.userData}
         loadingForm={loadingForm}
         loadingRandomTopic={loadingRandomTopic}
         canCreate={canCreate}
@@ -297,7 +297,7 @@ export function RoomCreate({ canCreate }: RoomCreateProps) {
             <DialogHeader className="mb-5">
               <DialogTitle>Sign in</DialogTitle>
               <DialogDescription>
-                You need to sign up to create a room
+                You need to have an account to create a room
               </DialogDescription>
             </DialogHeader>
             <SignInButton showTitle />

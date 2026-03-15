@@ -266,7 +266,7 @@ export const RoomCreateMobile = ({
             <DrawerHeader>
               <DrawerTitle>Sign in</DrawerTitle>
               <DrawerDescription>
-                You need to sign up to create a room
+                You need to have an account to create a room
               </DrawerDescription>
             </DrawerHeader>
             <div className="px-4 w-full shrink-0 mb-4">
