@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLoaderData } from "react-router";
-import { type HomeLoader, type TLanguage } from "../../types";
-import { useRoomsContext } from "../../provider/roomsContext";
-import { StarField } from "./BackgroundLive";
-import Tools from "./Tools";
-import Rooms from "./rooms";
-import Header from "./header";
+import { StarField } from "./home/BackgroundLive";
+import Tools from "./home/Tools";
+import { useRoomsContext } from "@/provider/roomsContext";
+import type { HomeLoader, TLanguage } from "@/types";
+import Header from "./Header";
+import Rooms from "./Rooms";
 
 const Home = () => {
   const homeLoader: HomeLoader = useLoaderData();

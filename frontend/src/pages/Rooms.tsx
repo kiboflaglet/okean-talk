@@ -1,10 +1,10 @@
+import { useRoomsContext } from "@/provider/roomsContext";
+import type { HomeLoader } from "@/types";
 import { MessageSquareDashed } from "lucide-react";
 import { useState } from "react";
 import { useLoaderData } from "react-router";
-import { useRoomsContext } from "../../provider/roomsContext";
-import type { HomeLoader } from "../../types";
-import RoomSingle from "./RoomSingle";
-import { SignInDialog } from "./SignInDialog";
+import RoomSingle from "./home/RoomSingle";
+import { SignInDialog } from "./home/SignInDialog";
 
 export const Rooms = () => {
   const { rooms, loading } = useRoomsContext();
