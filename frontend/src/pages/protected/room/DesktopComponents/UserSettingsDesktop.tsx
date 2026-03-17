@@ -22,7 +22,7 @@ const UserSettingsDesktop = () => {
   return (
     <div className="flex items-center gap-3">
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger>
           <Avatar className="size-9 cursor-pointer ring-2 ring-white/20 hover:ring-white/40 transition-all">
             <AvatarImage alt={userData?.fullName} src={userData?.avatar_url} />
             <AvatarFallback className="bg-white/10 text-white text-sm">

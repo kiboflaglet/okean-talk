@@ -18,11 +18,11 @@ import {
   SelectValue,
   Select as ShadSelect,
 } from "@/components/ui/select";
-import { useBackButtonClose } from "@/hooks/useBackButtonClose";
+import type { IRoom } from "@/interfaces";
 import { handleError } from "@/lib/errorHandler";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dice4, Loader, Plus } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useLoaderData } from "react-router";
 import { Button } from "../../components/ui/button";
@@ -47,24 +47,44 @@ import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { sleep } from "../../lib/utils";
 import { useRoomsContext } from "../../provider/roomsContext";
 import { Languages, type HomeLoader } from "../../types";
-import { RoomCreateMobile } from "./RoomCreateMobile";
 import { roomSchema, type RoomFormValues } from "./roomSchema";
 import SignInButton from "./SignInButton";
+import { RoomCreateMobile } from "./RoomFormMobile";
 
 type RoomCreateProps = {
   canCreate: boolean;
+  isEdit?: boolean;
+  room?: IRoom | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onSuccess?: () => void;
 };
 
-export function RoomCreate({ canCreate }: RoomCreateProps) {
-  const { addRoom } = useRoomsContext();
+export function RoomCreate({
+  canCreate,
+  open,
+  onSuccess,
+  isEdit = false,
+  room = null,
+  onOpenChange,
+}: RoomCreateProps) {
+  const { addRoom, updateRoom } = useRoomsContext();
   const { isMobile } = useBreakpoint();
   const loaderData: HomeLoader = useLoaderData();
   const [randomAvaialableCount, setRandomAvaialableCount] = useState<number>(3);
   const [loadingRandomTopic, setLoadingRandomTopic] = useTransition();
   const [loadingForm, setLoadingForm] = useTransition();
-  const [roomCreateFormOpen, setRoomCreateFormOpen] = useState(false);
-  const [langDrawerOpen, setLangDrawerOpen] = useState(false);
-  const [participantsDrawerOpen, setParticipantsDrawerOpen] = useState(false);
+
+
+  useEffect(() => {
+    if (isEdit && room) {
+      form.reset({
+        topic: room.topic,
+        languages: room.languages,
+        maxParticipants: room.maxParticipants,
+      });
+    }
+  }, [isEdit, room]);
 
   const form = useForm({
     defaultValues: {
@@ -90,44 +110,30 @@ export function RoomCreate({ canCreate }: RoomCreateProps) {
     if (!loaderData?.userData) return;
 
     setLoadingForm(async () => {
-      await addRoom({
-        topic: data.topic,
-        languages: data.languages,
-        maxParticipants: data.maxParticipants,
-        ownerId: loaderData.userData?.id,
-      });
+      if (isEdit && room) {
+        await updateRoom(room.id, {
+          topic: data.topic,
+          languages: data.languages,
+          maxParticipants: data.maxParticipants,
+        });
+      } else {
+        await addRoom({
+          topic: data.topic,
+          languages: data.languages,
+          maxParticipants: data.maxParticipants,
+          ownerId: loaderData.userData?.id,
+        });
+      }
 
-      setRoomCreateFormOpen(false);
+
+      onSuccess?.();
+      form.reset();
     });
   };
 
   const onError = (error: any) => {
     handleError("Something error", "form error", error);
   };
-
-  const handleClose = () => {
-    form.reset();
-    setRoomCreateFormOpen(false);
-    if (window.history.state?.modal) {
-      window.history.back();
-    }
-  };
-
-  useBackButtonClose(
-    roomCreateFormOpen && !langDrawerOpen && !participantsDrawerOpen,
-    () => {
-      form.reset();
-      setRoomCreateFormOpen(false);
-    }
-  );
-
-  useBackButtonClose(participantsDrawerOpen, () => {
-    setParticipantsDrawerOpen(false);
-  });
-
-  useBackButtonClose(langDrawerOpen, () => {
-    setLangDrawerOpen(false);
-  });
 
   if (isMobile) {
     return (
@@ -140,33 +146,33 @@ export function RoomCreate({ canCreate }: RoomCreateProps) {
         pickRandomTopic={pickRandomTopic}
         onSubmit={onSubmit}
         onError={onError}
+        isEdit={isEdit}
+        formOpen={open}
+        onFormOpenChange={onOpenChange}
       />
     );
   }
   return (
     <Dialog
       onOpenChange={(open) => {
-        if (open) {
-          if (!canCreate) return;
-          setRoomCreateFormOpen(open);
-        } else {
-          handleClose();
-        }
+        onOpenChange?.(open);
       }}
-      open={roomCreateFormOpen}
+      open={open}
     >
-      <DialogTrigger>
-        <Button disabled={!canCreate} className={"py-4"}>
-          <Plus className="size-4" /> {!isMobile && "Create room"}
-        </Button>
-      </DialogTrigger>
+      {!isEdit && (
+        <DialogTrigger disabled={!canCreate}>
+          <Button disabled={!canCreate} className="py-4">
+            <Plus className="size-4" /> {!isMobile && "Create room"}
+          </Button>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="min-w-2xl ">
         {loaderData?.userData ? (
           <form onSubmit={form.handleSubmit(onSubmit, onError)}>
             <DialogHeader className="mb-5 ">
               <DialogTitle className={"text-3xl font-bold text-center"}>
-                Create a room
+                {isEdit ? "Update the room " : "Create a room"}
               </DialogTitle>
             </DialogHeader>
 
@@ -288,7 +294,8 @@ export function RoomCreate({ canCreate }: RoomCreateProps) {
                 type="submit"
                 disabled={loadingForm}
               >
-                Create {loadingForm && <Loader className="animate-spin" />}
+                {isEdit ? "Update" : "Create"}
+                {loadingForm && <Loader className="animate-spin" />}
               </Button>
             </DialogFooter>
           </form>

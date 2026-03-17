@@ -36,7 +36,7 @@ import {
 import { useBreakpoint } from "../../hooks/useBreakpoint";
 import { cn } from "../../lib/utils";
 import { useRoomsContext } from "../../provider/roomsContext";
-import { RoomCreate } from "./RoomCreateDesktop";
+import { RoomCreate } from "./RoomForm";
 
 const Tools = () => {
   const homeLoader: HomeLoader = useLoaderData();
@@ -45,6 +45,7 @@ const Tools = () => {
   const { setFilters, rooms } = useRoomsContext();
   const { states, open, close } = useDrawerStack(2);
   const [openMobileFilters, langDrawerOpen] = states;
+  const [openRoomForm, setOpenRoomForm] = useState(false);
 
   const openMainDrawer = () => open(0);
   const openLangDrawer = () => open(1);
@@ -66,6 +67,11 @@ const Tools = () => {
         canCreate={
           !rooms.find((item) => item.ownerId === homeLoader?.userData?.id)
         }
+        open={openRoomForm}
+        onOpenChange={setOpenRoomForm}
+        onSuccess={() => {
+          setOpenRoomForm(false);
+        }}
       />
       <div className="min-w-0 flex-1">
         <InputGroup className="w-full py-4 backdrop-blur-md transition-colors">

@@ -81,7 +81,7 @@ const Header = ({ homeLoader }: HeaderProps) => {
         </div>
 
         {isMobile && (
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center ">
             {homeLoader?.userData ? (
               <Drawer
                 open={openUserSettings}
@@ -141,7 +141,7 @@ const Header = ({ homeLoader }: HeaderProps) => {
       {!isMobile && homeLoader?.userData && (
         <div className="flex items-center gap-5">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger>
               <Avatar className="size-9 cursor-pointer ring-2 ring-white/20 hover:ring-white/40 transition-all">
                 <AvatarImage
                   alt={homeLoader?.userData?.fullName}
@@ -158,7 +158,7 @@ const Header = ({ homeLoader }: HeaderProps) => {
               side="bottom"
               align="end"
             >
-              {/* User info header */}
+
               <div className="flex items-center gap-3 px-3 py-3">
                 <Avatar className="size-11 ring-2 ring-white/20">
                   <AvatarImage

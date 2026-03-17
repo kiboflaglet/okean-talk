@@ -5,11 +5,18 @@ import { useState } from "react";
 import { useLoaderData } from "react-router";
 import RoomSingle from "./RoomSingle";
 import { SignInDialog } from "./SignInDialog";
+import { RoomCreate } from "./RoomForm";
+import type { IRoom } from "@/interfaces";
+import { RoomDelete } from "./RoomDelete";
 
 export const Rooms = () => {
   const { rooms, loading } = useRoomsContext();
   const loaderData: HomeLoader = useLoaderData();
   const [signInOpen, setSignInOpen] = useState(false);
+  const [openRoomForm, setOpenRoomForm] = useState(false);
+  const [editRoomData, setEditRoomData] = useState<IRoom | null>(null);
+  const [openDeleteRoom, setOpenDeleteRoom] = useState(false);
+  const [deleteRoomId, setDeleteRoomId] = useState<string | null>(null);
 
   return (
     <section className="mt-6 pb-10">
@@ -27,7 +34,9 @@ export const Rooms = () => {
             <MessageSquareDashed className="w-7 h-7 text-gray-400 dark:text-gray-500" />
           </div>
           <div>
-            <p className="font-semibold text-gray-700 dark:text-gray-300">No rooms yet</p>
+            <p className="font-semibold text-gray-700 dark:text-gray-300">
+              No rooms yet
+            </p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
               Be the first — tap the <strong>+</strong> icon to create one
             </p>
@@ -41,15 +50,30 @@ export const Rooms = () => {
             <div
               key={item.id}
               className="animate-zoom-in"
-              style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
+              style={{
+                animationDelay: `${i * 40}ms`,
+                animationFillMode: "both",
+              }}
             >
               <RoomSingle
                 joinRoom={() => {
                   if (!loaderData?.userData) {
                     setSignInOpen(true);
                   } else {
-                    window.open(`${window.location.origin}/room/${item.id}`, "_blank");
+                    window.open(
+                      `${window.location.origin}/room/${item.id}`,
+                      "_blank"
+                    );
                   }
+                }}
+                isOwner={loaderData?.userData?.id === item.ownerId}
+                onEdit={(e) => {
+                  setEditRoomData(e);
+                  setOpenRoomForm(true);
+                }}
+                onDelete={(e) => {
+                  setDeleteRoomId(e)
+                  setOpenDeleteRoom(true);
                 }}
                 {...item}
               />
@@ -58,8 +82,29 @@ export const Rooms = () => {
         </div>
       )}
 
+      <RoomCreate
+        canCreate
+        isEdit
+        room={editRoomData}
+        open={openRoomForm}
+        onOpenChange={setOpenRoomForm}
+        onSuccess={() => {
+          setOpenRoomForm(false);
+        }}
+      />
+
+
+      <RoomDelete
+        roomId={deleteRoomId}
+        open={openDeleteRoom}
+        onOpenChange={setOpenDeleteRoom}
+        onSuccess={() => {
+          setOpenDeleteRoom(false);
+        }}
+      />
+
       <SignInDialog
-        description="You need to sign in to join a room"
+        description="You need to have an account to join a room"
         open={signInOpen}
         onOpenChange={setSignInOpen}
       />
@@ -80,7 +125,10 @@ function RoomCardSkeleton() {
       </div>
       <div className="flex gap-2">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700" />
+          <div
+            key={i}
+            className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700"
+          />
         ))}
       </div>
       <div className="flex items-center gap-2">
@@ -94,4 +142,4 @@ function RoomCardSkeleton() {
   );
 }
 
-export default Rooms
+export default Rooms;

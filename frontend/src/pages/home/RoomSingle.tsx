@@ -1,5 +1,19 @@
-import { ChevronRight, Copy } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  ChevronRight,
+  Copy,
+  MoreVertical,
+  PencilIcon,
+  TrashIcon,
+} from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Avatar,
   AvatarFallback,
@@ -17,6 +31,9 @@ import { Languages } from "../../types";
 
 type RoomSingleProps = IRoom & {
   joinRoom: () => void;
+  isOwner: boolean;
+  onEdit: (room: IRoom) => void;
+  onDelete: (roomId: string) => void;
 };
 
 const RoomSingle = ({ joinRoom, ...props }: RoomSingleProps) => {
@@ -40,20 +57,25 @@ const RoomSingle = ({ joinRoom, ...props }: RoomSingleProps) => {
 
   const colsClass = totalSlots <= 5 ? "grid-cols-5" : "grid-cols-5";
 
-  const copyId = () => {
+  const copyId = useCallback(() => {
     navigator.clipboard.writeText(`${window.location.origin}/room/${props.id}`);
     setCopyPing(true);
     setTimeout(() => setCopyPing(false), 1200);
-  };
+  }, []);
 
   const languageLabels = props.languages
     .map((l) => Languages.find((i) => i.value === l)?.label)
     .filter(Boolean)
     .join(", ");
 
+  const ownerInitials = useMemo(() => {
+    if (!props?.owner?.fullName) return;
+    return NameToInitials(props.owner?.fullName);
+  }, []);
+
   return (
-    <div className="group relative p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 min-h-50 flex flex-col justify-between overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 hover:bg-gradient-to-br from-transparent to-gray-50 dark:to-gray-800/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <div className="group relative p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md  transition-all duration-200 min-h-50 flex flex-col justify-between overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 hover:bg-linear-to-br from-transparent   opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap gap-1.5">
@@ -73,24 +95,83 @@ const RoomSingle = ({ joinRoom, ...props }: RoomSingleProps) => {
           )}
         </div>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={copyId}
-              className="shrink-0 w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-            >
-              <Copy
-                className={cn(
-                  "w-3.5 h-3.5 transition-all duration-300",
-                  copyPing && "scale-125 text-emerald-500"
+        <div className="flex gap-2">
+          <Button
+            onClick={copyId}
+            className="shrink-0 w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          >
+            <Copy
+              className={cn(
+                "w-3.5 h-3.5 transition-all duration-300",
+                copyPing && "scale-125 text-emerald-500"
+              )}
+            />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Button className="shrink-0 w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                <MoreVertical
+                  className={cn("w-3.5 h-3.5 transition-all duration-300")}
+                />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className={"w-max"}>
+              <div className="flex items-center gap-3 px-3 py-1 w-full">
+                <Avatar className="size-6 ring-2 ring-white/20">
+                  <AvatarImage
+                    alt={props.owner?.fullName}
+                    src={props.owner?.avatar_url}
+                  />
+                  <AvatarFallback className="  text-sm">
+                    {ownerInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-semibold  ">
+                    {props?.owner?.fullName}
+                  </span>
+                  <span className="text-[10px] ">Owner</span>
+                </div>
+              </div>
+
+              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuGroup>
+                {props.isOwner && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      props.onEdit(props);
+                    }}
+                  >
+                    <PencilIcon />
+                    Edit
+                  </DropdownMenuItem>
                 )}
-              />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="top" sideOffset={8}>
-            {copyPing ? "Copied!" : "Copy link"}
-          </TooltipContent>
-        </Tooltip>
+
+                <DropdownMenuItem onClick={copyId}>
+                  <Copy />
+                  Copy
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              {props.isOwner && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        props.onDelete(props.id);
+                      }}
+                      variant="destructive"
+                    >
+                      <TrashIcon />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed flex-1 flex items-center">
@@ -124,7 +205,7 @@ const RoomSingle = ({ joinRoom, ...props }: RoomSingleProps) => {
         </div>
 
         <Tooltip>
-          <TooltipTrigger asChild>
+          <TooltipTrigger>
             <span className="inline-block">
               <Button
                 onClick={joinRoom}
@@ -170,7 +251,7 @@ function UserInRoomCard({
   }, []);
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
+      <TooltipTrigger>
         <Avatar
           className={cn(
             avatarSize,

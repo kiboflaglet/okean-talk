@@ -17,7 +17,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { Button } from "../../components/ui/button";
 import {
@@ -49,6 +49,9 @@ type RoomCreateMobileProps = {
   pickRandomTopic: () => void;
   onSubmit: (data: RoomFormValues) => void;
   onError: (error: any) => void;
+  formOpen?: boolean;
+  isEdit?: boolean;
+  onFormOpenChange?: (open: boolean) => void;
 };
 
 export const RoomCreateMobile = ({
@@ -60,9 +63,12 @@ export const RoomCreateMobile = ({
   pickRandomTopic,
   onSubmit,
   onError,
+  onFormOpenChange,
+  formOpen = false,
+  isEdit = false,
 }: RoomCreateMobileProps) => {
   const { open, close, states } = useDrawerStack(3);
-  const [roomCreateFormOpen, langDrawerOpen, participantsDrawerOpen] = states;
+  const [roomFormOpen, langOpen, participantsOpen] = states;
 
   const openMainDrawer = () => open(0);
   const closeMainDrawer = () => close(0);
@@ -76,27 +82,41 @@ export const RoomCreateMobile = ({
     closeMainDrawer();
   };
 
+  useEffect(() => {
+    if (formOpen === undefined) return;
+    if (formOpen) {
+      openMainDrawer();
+    } else {
+      closeMainDrawer();
+    }
+  }, [formOpen]);
+
   return (
     <Drawer
       onOpenChange={(open) => {
+        onFormOpenChange?.(open);
         if (open) openMainDrawer();
         else closeMainDrawer();
       }}
-      open={roomCreateFormOpen}
+      open={roomFormOpen}
     >
-      <DrawerTrigger asChild>
-        <Button disabled={!canCreate}>
-          <Plus className="w-8 h-8" />
-        </Button>
-      </DrawerTrigger>
+      {!isEdit && (
+        <DrawerTrigger asChild>
+          <Button disabled={!canCreate}>
+            <Plus className="w-8 h-8" />
+          </Button>
+        </DrawerTrigger>
+      )}
 
       <DrawerContent>
         {userData ? (
           <>
             <DrawerHeader>
-              <DrawerTitle>Create a new room</DrawerTitle>
+              <DrawerTitle>
+                {isEdit ? "Update the room " : "Create a room"}
+              </DrawerTitle>
               <DrawerDescription>
-                You can change room settings later
+                {!isEdit && "You can change room settings later "}
               </DrawerDescription>
             </DrawerHeader>
 
@@ -187,7 +207,7 @@ export const RoomCreateMobile = ({
                       )}
 
                       <LanguagePickerDrawer
-                        open={langDrawerOpen}
+                        open={langOpen}
                         onClose={() => {
                           closeLangDrawer();
                         }}
@@ -240,7 +260,7 @@ export const RoomCreateMobile = ({
                       </Button>
 
                       <MaxParticipantsDrawer
-                        open={participantsDrawerOpen}
+                        open={participantsOpen}
                         onClose={closeMaxParticipants}
                         value={field.value}
                         onChange={field.onChange}
@@ -256,7 +276,8 @@ export const RoomCreateMobile = ({
                   className={"py-4.5 text-md"}
                   disabled={loadingForm}
                 >
-                  Create {loadingForm && <Loader className="animate-spin" />}
+                  {isEdit ? "Update" : "Create"}
+                  {loadingForm && <Loader className="animate-spin" />}
                 </Button>
               </DrawerFooter>
             </form>
